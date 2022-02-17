@@ -25,7 +25,8 @@ class User extends Authenticatable
         'username',
         'phone',
         'is_admin',
-        'profile'
+        'profile',
+        'referral_link'
     ];
 
     /**
@@ -46,9 +47,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-  
+
     public function socialaccounts()
     {
         return $this->hasMany(LinkedSocialAccount::class);
+    }
+
+    public function referral()
+    {
+        return $this->belongsTo(Referral::class);
+    }
+    public function leagues()
+    {
+        return $this->belongsToMany(League::class)->withPivot('is_owner');
     }
 }

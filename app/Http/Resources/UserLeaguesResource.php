@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class GamerResource extends JsonResource
+class UserLeaguesResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,6 +14,12 @@ class GamerResource extends JsonResource
      */
     public function toArray($request)
     {
-        return ['id' => $this->id, 'name' => $this->name, 'username' => $this->username, 'profile' => $this->profile, 'email' => $this->email, 'referral_link' => $this->referral_link, 'phone' => $this->phone];
+        return [
+            "id" => $this->id,
+            "name" => $this->name,
+            'participants' => $this->participants,
+            'type' => $this->type,
+            "status"=> $this->status,
+        ];
     }
 }

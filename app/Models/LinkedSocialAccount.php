@@ -9,7 +9,7 @@ class LinkedSocialAccount extends Model
 {
     use HasFactory;
     protected $fillable = ['provider', 'provider_id', 'user_id'];
-
+    protected $hidden = ['created_at', 'updated_at'];
     public function user(){
         return $this->belongsTo(User::class)->withThrashed();
     }

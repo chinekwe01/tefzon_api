@@ -51,6 +51,7 @@ class UserController extends Controller
                 }
                 $info = $request->all();
                 $info['password'] = Hash::make($request->password);
+                $info['referral_link'] = $request->username;
                 $user = User::create($info);
                 $credentials = [
                     'email' => $request->email,
@@ -60,6 +61,10 @@ class UserController extends Controller
                     $token = $user->createToken('user-token', ['role-admin'])->plainTextToken;
                 } else {
                     $token = $user->createToken('user-token', ['role-gamer'])->plainTextToken;
+                }
+
+                if ($request->referral_link && $request->has('referral_link')  && $request->filled('referral_link')) {
+                    $user->referral()->create(['referral_link'=> strtolower($request->referral_link)]);
                 }
 
                 $data = [
@@ -345,7 +350,8 @@ class UserController extends Controller
             $user->save();
             return response()->json([
                 'status' => true,
-                'user' =>  new GamerResource($user)
+                'message' => 'updated',
+                'data' =>  new GamerResource($user)
             ]);
         } catch (\Throwable $th) {
             return response([
@@ -369,5 +375,22 @@ class UserController extends Controller
 
             ], 500);
         }
+    }
+    public function logout(User $user)
+    {
+
+        try {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'logout successful'
+            ]);
+        } catch (\Throwable $th) {
+            return response([
+                'status' => false,
+                'message' => 'logout failed',
+
+            ], 500);
+        }
+
     }
 }
