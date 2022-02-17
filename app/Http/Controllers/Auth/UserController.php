@@ -89,7 +89,7 @@ class UserController extends Controller
         try {
 
             $validator = Validator::make(request()->all(), [
-                'email' => 'required|email',
+                'email' => 'required|email|exists:users',
                 'password' => 'required|min:6',
 
             ]);
@@ -134,7 +134,7 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                'email' => 'required|email',
+                'email' => 'required|email|exists:users',
             ]);
 
             $token = Str::random(40);
@@ -235,7 +235,7 @@ class UserController extends Controller
 
         try {
             $request->validate([
-                'email' => 'required|email',
+                'email' => 'required|email|exists:users',
             ]);
 
             $user =  User::where('email', $request->email)->first();
