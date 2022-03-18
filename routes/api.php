@@ -40,8 +40,38 @@ Route::middleware('auth:sanctum', 'ability:role-gamer')->group(function () {
     Route::get('league/users/{league}', [LeagueController::class, 'getleagueusers']);
     Route::get('user/leagues/{user}', [LeagueController::class, 'getuserleagues']);
     Route::get('join/league/{league}', [LeagueController::class, 'joinleague']);
+
    Route::apiResource('leagues', LeagueController::class);
+
+
 });
+Route::get('get/league/teams/{season_id}', [LeagueController::class, 'getleagueteams']);
+Route::get('get/leagues', [LeagueController::class, 'getleagues']);
+Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
+Route::get('search/team', [LeagueController::class, 'searchteambyname']);
+
+Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
+Route::get('get/player/{id}', [LeagueController::class, 'getplayerbyid']);
+Route::get('search/player', [LeagueController::class, 'searchplayerbyname']);
+
+
+Route::post('add/player', [LeagueController::class, 'addplayer']);
+Route::get('get/my/squad', [LeagueController::class, 'getmysquad']);
+Route::get('get/my/forwards', [LeagueController::class, 'getforwards']);
+Route::get('get/my/midfielders', [LeagueController::class, 'getmidfielders']);
+Route::get('get/my/defenders', [LeagueController::class, 'getdefenders']);
+Route::get('get/my/goalkeepers', [LeagueController::class, 'getgoalkeepers']);
+
+Route::post('select/squad', [LeagueController::class, 'selectsquad']);
+
+Route::post('swap/position', [LeagueController::class, 'swapposition']);
+Route::post('swap/players', [LeagueController::class, 'swapplayer']);
+
+
+
+
+
+Route::put('sort/squad/{gamerSquad}', [LeagueController::class, 'sortsquad']);
 
 
 

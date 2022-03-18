@@ -53,6 +53,41 @@ class User extends Authenticatable
         return $this->hasMany(LinkedSocialAccount::class);
     }
 
+    public function squad()
+    {
+        return $this->hasMany(GamerSquad::class);
+    }
+    public function forwards()
+    {
+        return $this->squad()->get()->filter(function ($a) {
+            return $a->position_id == 4;
+        });
+    }
+    public function defenders()
+    {
+        return $this->squad()->get()->filter(function ($a) {
+            return $a->position_id == 2;
+        });
+    }
+    public function goalkeepers()
+    {
+        return $this->squad()->get()->filter(function ($a) {
+            return $a->position_id == 1;
+        });
+    }
+    public function midfielders()
+    {
+        return $this->squad()->get()->filter(function ($a) {
+            return $a->position_id == 3;
+        });
+    }
+    public function totalvalue()
+    {
+        return $this->squad()->get()->map(function ($a) {return $a->value;})->reduce(function ($a, $b) {
+            return $a + $b;
+        }, 0);;
+    }
+
     public function referral()
     {
         return $this->belongsTo(Referral::class);

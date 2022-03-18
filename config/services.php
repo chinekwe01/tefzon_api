@@ -44,5 +44,9 @@ return [
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => env('FACEBOOK_URL'),
     ],
+    'sportmonks' => [
+        'key' => env('SPORT_APIKEY'),
+        'url' => env('SPORT_URL'),
+    ]
 
 ];
