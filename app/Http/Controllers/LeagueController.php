@@ -12,8 +12,8 @@ use App\Http\Resources\UserLeaguesResource;
 
 class LeagueController extends Controller
 {
-    public $url;
-    public $apikey;
+    protected $url;
+    protected $apikey;
     public $user;
 
     public function __construct()
@@ -200,6 +200,8 @@ class LeagueController extends Controller
 
         //Get squad
         $record = $this->getmysquadcount();
+        $player  = $this->getplayerbyid($request->player_id);
+
 
         if ($record['totalvalue'] > 100000000) {
             return response('exceeded transfer budget', 422);
@@ -208,25 +210,26 @@ class LeagueController extends Controller
         if ($record['squad_count'] === 15) {
             return response('Squad full', 422);
         }
-        $checkforsameteam =  $this->checkteamid($record['squad'], $request->team_id);
+        $checkforsameteam =  $this->checkteamid($record['squad'], $player->team_id);
         if ($checkforsameteam['status'] == 'max') {
             return response('can not have more than 4 players from same team', 422);
         }
 
-        if ($this->checkposition($record['squad'], $request->position_id)['status'] == 'max') {
+        if ($this->checkposition($record['squad'], $player->position_id)['status'] == 'max') {
             return response('max position reached', 422);
         }
 
         return  $this->user->squad()->create([
 
-            'player_name' => $request->player_name,
-            'player_position' => $request->player_position,
-            'player_id' => $request->player_id,
-            'position_id' => $request->position_id,
-            'value' => $request->value,
-            'team_id' => $request->team_id,
-            'team' => $request->team,
-            'image_path' => $request->image_path
+            'player_name' => $player['display_name'],
+            'player_position' => $this->getPosition($player['position_id']),
+            'player_id' => $player['player_id'],
+            'position_id' => $player['position_id'],
+            'value' => 10000,
+            'team_id' => $player['team_id'],
+            'team' => $player['team']['data']['name'],
+            'image_path' => $player['image_path'],
+            'starting' => false
 
         ]);
     }
@@ -256,12 +259,53 @@ class LeagueController extends Controller
         return $player;
     }
 
+
     public function checkstartingsquad($player)
     {
         return  $starting = $this->user->squad()->get()->filter(function ($a) use ($player) {
             return $a->starting && $a->position_id == $player->position_id;
         })->count();
     }
+
+    public function substituteplayer(Request $request)
+    {
+
+        $currentPlayer = GamerSquad::find($request->current_player_id);
+        $replacementPlayer = GamerSquad::find($request->replacement_player_id);
+        $currentPlayer->starting = false;
+        $currentPlayer->save();
+
+        $replacementPlayer->starting = true;
+        $replacementPlayer->save();
+        return response([
+            'status' => true
+        ], 200);
+    }
+
+    public function swapplayer(Request $request)
+    {
+
+        $currentPlayer = GamerSquad::where('player_id',$request->current_player_id)->first();
+        $player  = $this->getplayerbyid($request->replacement_player_id);
+       if( $currentPlayer->position_id != $player['position_id']) return response('Unacceptable',403);
+        $currentPlayer->player_name =  $player['display_name'];
+        $currentPlayer->player_position  =  $this->getPosition($player['position_id']);
+        $currentPlayer->player_id = $player['player_id'];
+        $currentPlayer->position_id = $player['position_id'];
+        $currentPlayer->value = 100;
+        $currentPlayer->team_id = $player['team_id'];
+        $currentPlayer->team = $player['team']['data']['name'];
+        $currentPlayer->image_path = $player['image_path'];
+        $currentPlayer->save();
+        return $currentPlayer;
+    }
+    public function removeplayer(gamerSquad $gamerSquad)
+    {
+        $gamerSquad->delete();
+        return  response('ok');
+    }
+
+
     public function getleagues()
     {
         try {
@@ -408,7 +452,8 @@ class LeagueController extends Controller
         try {
             $response = Http::get(
                 $this->url . "/players/" . $id,
-                ['api_token' => $this->apikey]
+                ['api_token' => $this->apikey,
+                'include'=> 'team']
             );
             return $response['data'];
         } catch (\Throwable $th) {

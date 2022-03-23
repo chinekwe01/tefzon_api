@@ -64,9 +64,9 @@ Route::get('get/my/goalkeepers', [LeagueController::class, 'getgoalkeepers']);
 
 Route::post('select/squad', [LeagueController::class, 'selectsquad']);
 
-Route::post('swap/position', [LeagueController::class, 'swapposition']);
-Route::post('swap/players', [LeagueController::class, 'swapplayer']);
-
+Route::post('substitute/player', [LeagueController::class, 'substituteplayer']);
+Route::post('swap/player', [LeagueController::class, 'swapplayer']);
+Route::delete('remove/player/{gamerSquad}', [LeagueController::class, 'removeplayer']);
 
 
 
