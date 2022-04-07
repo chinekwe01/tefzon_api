@@ -13,14 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('league_user', function (Blueprint $table) {
+        Schema::create('lock_statuses', function (Blueprint $table) {
             $table->id();
-            $table->boolean('is_owner')->default(false);
-            $table->foreignId('user_id')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreignId('league_id')->onDelete('cascade')->onUpdate('cascade');
+            $table->integer('gameweek');
+            $table->boolean('status');
             $table->timestamps();
-            $table->softDeletes();
-            $table->bigInteger('deleted_by')->nullable();
         });
     }
 
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('league_user');
+        Schema::dropIfExists('lock_statuses');
     }
 };

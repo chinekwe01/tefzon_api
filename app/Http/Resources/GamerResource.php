@@ -14,6 +14,6 @@ class GamerResource extends JsonResource
      */
     public function toArray($request)
     {
-        return ['id' => $this->id, 'name' => $this->name, 'username' => $this->username, 'profile' => $this->profile, 'email' => $this->email, 'referral_link' => $this->referral_link, 'phone' => $this->phone];
+        return ['id' => $this->id, 'name' => $this->name, 'username' => $this->username, 'avatar' => $this->avatar, 'email' => $this->email, 'referral_link' => $this->referral_link, 'phone' => $this->phone];
     }
 }

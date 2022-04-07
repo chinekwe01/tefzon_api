@@ -25,7 +25,7 @@ class User extends Authenticatable
         'username',
         'phone',
         'is_admin',
-        'profile',
+        'avatar',
         'referral_link'
     ];
 
@@ -37,6 +37,11 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'updated_at',
+        'email_verified_at',
+        'deleted_at',
+        'deleted_by',
+        'is_admin'
     ];
 
     /**
@@ -87,6 +92,10 @@ class User extends Authenticatable
             return $a + $b;
         }, 0);;
     }
+    public function chip()
+    {
+        return $this->hasOne(Chip::class);
+    }
 
     public function referral()
     {
@@ -95,5 +104,9 @@ class User extends Authenticatable
     public function leagues()
     {
         return $this->belongsToMany(League::class)->withPivot('is_owner');
+    }
+    public function gameweekpoint()
+    {
+        return $this->hasMany(GameweekPoint::class);
     }
 }

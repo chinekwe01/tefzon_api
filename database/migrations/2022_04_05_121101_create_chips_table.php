@@ -13,16 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('leagues', function (Blueprint $table) {
+        Schema::create('chips', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->integer('participants');
-            $table->string('type');
-            $table->string('duration');
-            $table->string('start');
-            $table->string('end');
-            $table->string('status');
-            $table->string('code');
+            $table->integer('free_hit')->default(2);
+            $table->integer('bench_boost')->default(1);
+            $table->integer('wildcard')->default(1);
+            $table->integer('triple_captain')->default(1);
+            $table->integer('free_transfer')->default(1);
+            $table->bigInteger('budget')->default(100000000);
+            $table->foreignId('user_id');
             $table->timestamps();
             $table->softDeletes();
             $table->bigInteger('deleted_by')->nullable();
@@ -36,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('leagues');
+        Schema::dropIfExists('chips');
     }
 };

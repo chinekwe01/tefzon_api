@@ -30,4 +30,8 @@ class GamerSquad extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function gameweekpoint()
+    {
+        return $this->hasMany(GameweekPoint::class);
+    }
 }

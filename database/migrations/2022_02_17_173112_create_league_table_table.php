@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreignId('user_id')->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('league_id')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
+            $table->softDeletes();
+            $table->bigInteger('deleted_by')->nullable();
         });
     }
 

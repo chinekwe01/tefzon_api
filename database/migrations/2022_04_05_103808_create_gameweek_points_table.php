@@ -13,23 +13,25 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('gamer_squads', function (Blueprint $table) {
+        Schema::create('gameweek_points', function (Blueprint $table) {
             $table->id();
-            $table->integer('squad_no')->nullable();
+
             $table->string('player_name');
             $table->string('player_position');
+            $table->string('image_path')->nullable();
             $table->integer('player_id');
-            $table->integer('position_id');
-            $table->integer('value');
-            $table->integer('team_id');
-            $table->string('team');
+            $table->integer('position_id')->nullable();
+            $table->string('position');
             $table->boolean('is_captain')->default(false);
             $table->boolean('is_vice_captain')->default(false);
-            $table->boolean('is_absent')->default(false);
-            $table->boolean('is_injured')->default(false);
+            $table->boolean('is_starting')->default(false);
+            $table->integer('point')->default(0);
+            $table->integer('gameweek');
             $table->foreignId('user_id');
+            $table->foreignId('gamer_squad_id');
             $table->timestamps();
             $table->softDeletes();
+            $table->bigInteger('deleted_by')->nullable();
         });
     }
 
@@ -40,6 +42,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('gamer_squads');
+        Schema::dropIfExists('gameweek_points');
     }
 };

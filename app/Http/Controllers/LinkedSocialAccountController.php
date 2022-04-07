@@ -29,7 +29,7 @@ class LinkedSocialAccountController extends Controller
         }
         try {
             $user = Socialite::driver($provider)->stateless()->user();
-         
+
         } catch (ClientException $exception) {
             return response()->json(['error' => 'Invalid credentials provided.'], 422);
         }
@@ -42,7 +42,7 @@ class LinkedSocialAccountController extends Controller
                 'email_verified_at' => now(),
                 'name' => $user->getName(),
                 'username' => str_replace(' ','', $user->getName()),
-                'profile' => $user->getAvatar()
+                'avatar' => $user->getAvatar()
 
             ]
         );

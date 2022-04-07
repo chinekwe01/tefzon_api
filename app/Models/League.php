@@ -17,10 +17,19 @@ class League extends Model
         'end',
         'status',
         'code',
+        'winner_type'
+    ];
+    protected $hidden = [
+
+
     ];
 
     public function users()
     {
         return $this->belongsToMany(User::class)->withPivot('is_owner');
+    }
+    public function leaguetable()
+    {
+        return $this->hasMany(LeagueTable::class);
     }
 }

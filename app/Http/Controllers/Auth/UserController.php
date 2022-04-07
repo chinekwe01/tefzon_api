@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\Otp;
+use App\Models\Chip;
 use App\Models\User;
 use App\Mail\OtpRequest;
 use App\Mail\WelcomeGamer;
@@ -26,7 +27,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        return User::get(['name', 'username', 'phone', 'id', 'profile', 'email']);
+        return User::get(['name', 'username', 'phone', 'id', 'avatar', 'email']);
     }
     public function show(User $user)
     {
@@ -73,6 +74,10 @@ class UserController extends Controller
                     'username' => $user->username,
                 ];
                 dispatch(new \App\Jobs\WelcomeGamerJob($data));
+
+                $chips = new Chip();
+                $chips->user_id = $user->id;
+                $chips->save();
                 return response([
                     'status' => true,
                     'message' => 'creation successful',
@@ -344,8 +349,8 @@ class UserController extends Controller
             if ($request->has('phone') && $request->filled('phone') && !is_null($request->phone)) {
                 $user->phone = $request->phone;
             }
-            if ($request->has('profile') && $request->filled('profile') && !is_null($request->profile)) {
-                $user->profile = $request->profile;
+            if ($request->has('avatar') && $request->filled('avatar') && !is_null($request->avatar)) {
+                $user->avatar = $request->avatar;
             }
             $user->save();
             return response()->json([

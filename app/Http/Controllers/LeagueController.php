@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use stdClass;
 use App\Models\League;
 use App\Models\GamerSquad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use App\Http\Resources\LeagueResource;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\LeagueUsersResource;
 use App\Http\Resources\UserLeaguesResource;
@@ -15,12 +18,36 @@ class LeagueController extends Controller
     protected $url;
     protected $apikey;
     public $user;
+    public $current_season_id;
+    public $previous_season_id;
+    public $max_players = 15;
+    public $max_forwards = 3;
+    public $max_midfielders = 5;
+    public $max_defenders = 5;
+    public $max_keepers = 2;
+
+
 
     public function __construct()
     {
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
+        $this->current_season_id = 18369;
+        $this->previous_season_id = 17141;
+    }
+
+
+    public function sortplayerscores()
+    {
+        $squads = GamerSquad::get();
+        $uniqueSquads = collect(GamerSquad::get(['player_id']))->unique();
+        foreach ($uniqueSquads as $player) {
+            # code...
+        }
+    }
+    protected function handlePoints($id)
+    {
     }
     public function getposition($val)
     {
@@ -162,29 +189,29 @@ class LeagueController extends Controller
 
         if (!in_array($position_id, $teams->toArray())) {
             return [
-                'status' => 'max'
+                'status' => 'ok'
             ];
         }
 
         $count = $teams->filter(function ($a) use ($position_id) {
             return $a == $position_id;
         })->count();
-        if ($position_id == 1 && $count == 2) {
+        if ($position_id == 1 && $count == $this->max_keepers) {
             return [
                 'status' => 'max'
             ];
         }
-        if ($position_id == 2 && $count == 5) {
+        if ($position_id == 2 && $count == $this->max_defenders) {
             return [
                 'status' => 'max'
             ];
         }
-        if ($position_id == 3 && $count == 5) {
+        if ($position_id == 3 && $count == $this->max_midfielders) {
             return [
                 'status' => 'max'
             ];
         }
-        if ($position_id == 4 && $count == 3) {
+        if ($position_id == 4 && $count == $this->max_forwards) {
             return [
                 'status' => 'max'
             ];
@@ -198,65 +225,87 @@ class LeagueController extends Controller
     public function addplayer(Request $request)
     {
 
-        //Get squad
-        $record = $this->getmysquadcount();
-        $player  = $this->getplayerbyid($request->player_id);
-
-
-        if ($record['totalvalue'] > 100000000) {
-            return response('exceeded transfer budget', 422);
-        }
-
-        if ($record['squad_count'] === 15) {
-            return response('Squad full', 422);
-        }
-        $checkforsameteam =  $this->checkteamid($record['squad'], $player->team_id);
-        if ($checkforsameteam['status'] == 'max') {
-            return response('can not have more than 4 players from same team', 422);
-        }
-
-        if ($this->checkposition($record['squad'], $player->position_id)['status'] == 'max') {
-            return response('max position reached', 422);
-        }
-
-        return  $this->user->squad()->create([
-
-            'player_name' => $player['display_name'],
-            'player_position' => $this->getPosition($player['position_id']),
-            'player_id' => $player['player_id'],
-            'position_id' => $player['position_id'],
-            'value' => 10000,
-            'team_id' => $player['team_id'],
-            'team' => $player['team']['data']['name'],
-            'image_path' => $player['image_path'],
-            'starting' => false
-
+        $validator = Validator::make(request()->all(), [
+            'player_id' => 'required|numeric'
         ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+
+            ], 422);
+        }
+        return DB::transaction(function () use ($request) {
+
+            //Get squad
+            $record = $this->getmysquadcount();
+            $budget = $this->user->chip()->first()->budget;
+            $player  = $this->getplayerbyid($request->player_id);
+            $checkforidenticalplayer = $this->user->squad()->where('player_id', $request->player_id)->first();
+            if (!is_null($checkforidenticalplayer)) return response('already in squad', 422);
+            if ($record['squad_count'] > 0) {
+                if ($record['totalvalue'] > $budget) {
+                    return response('exceeded transfer budget', 422);
+                }
+
+                if ($record['squad_count'] === $this->max_players) {
+                    return response('Squad full', 422);
+                }
+
+
+                $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
+                if ($checkforsameteam['status'] == 'max') {
+                    return response('can not have more than 4 players from same team', 422);
+                }
+
+                if ($this->checkposition($record['squad'], $player['position_id'])['status'] == 'max') {
+                    return response('max position selection reached', 422);
+                }
+            }
+
+
+            $this->user->squad()->create([
+
+                'player_name' => $player['display_name'],
+                'player_position' => $this->getPosition($player['position_id']),
+                'player_id' => $player['player_id'],
+                'position_id' => $player['position_id'],
+                'value' => 10000,
+                'team_id' => $player['team_id'],
+                'team' => $player['team']['data']['name'],
+                'image_path' => $player['image_path'],
+                'starting' => false
+
+            ]);
+            return response([
+                'status' => true,
+                'message' => 'added to squad'
+            ], 201);
+        });
     }
 
     public function selectsquad(Request $request)
     {
 
-        $starting = $request->starting;
+        $startingCount =  $this->user->squad()->where('starting', 1)->count();
         $player_id = $request->player_id;
-
         $player = GamerSquad::find($player_id);
+        if ($startingCount == 11) return response('squad set, replace active player', 422);
 
         if ($player->position_id == 1 &&  $this->checkstartingsquad($player) == 1) {
-            return 'Already selected';
+            return 'max selection';
         }
-        if ($player->position_id == 2 &&  $this->checkstartingsquad($player) == 4) {
-            return 'Already selected';
+        if ($player->position_id == 2 &&  $this->checkstartingsquad($player) == 5) {
+            return 'max selection';
         }
-        if ($player->position_id == 3 &&  $this->checkstartingsquad($player) == 4) {
-            return 'Already selected';
+        if ($player->position_id == 3 &&  $this->checkstartingsquad($player) == 5) {
+            return 'max selection';
         }
-        if ($player->position_id == 4 &&  $this->checkstartingsquad($player) == 2) {
-            return 'Already selected';
+        if ($player->position_id == 4 &&  $this->checkstartingsquad($player) == 3) {
+            return 'max selection';
         }
-        $player->starting = $starting;
+        $player->starting = true;
         $player->save();
-        return $player;
+        return response('squad updated', 200);
     }
 
 
@@ -272,32 +321,67 @@ class LeagueController extends Controller
 
         $currentPlayer = GamerSquad::find($request->current_player_id);
         $replacementPlayer = GamerSquad::find($request->replacement_player_id);
-        $currentPlayer->starting = false;
+
+        //create temp player
+        $tempPlayer = new stdClass();
+        $tempPlayer->player_name = $currentPlayer->player_name;
+        $tempPlayer->player_id =  $currentPlayer->player_id;
+        $tempPlayer->player_position = $currentPlayer->player_position;
+        $tempPlayer->position_id = $currentPlayer->position_id;
+        $tempPlayer->image_path = $currentPlayer->image_path;
+        $tempPlayer->team_id = $currentPlayer->team_id;
+        $tempPlayer->team = $currentPlayer->team;
+
+        //update current player
+        $currentPlayer->player_name = $replacementPlayer->player_name;
+        $currentPlayer->player_id = $replacementPlayer->player_id;
+        $currentPlayer->player_position = $replacementPlayer->player_position;
+        $currentPlayer->position_id = $replacementPlayer->position_id;
+        $currentPlayer->image_path = $replacementPlayer->image_path;
+        $currentPlayer->team_id = $currentPlayer->team_id;
+        $currentPlayer->team = $currentPlayer->team;
+
+        //update previous player
+        $replacementPlayer->player_name = $tempPlayer->player_name;
+        $replacementPlayer->player_id =  $tempPlayer->player_id;
+        $replacementPlayer->player_position = $tempPlayer->player_position;
+        $replacementPlayer->position_id = $tempPlayer->position_id;
+        $replacementPlayer->image_path = $tempPlayer->image_path;
+        $replacementPlayer->team_id = $currentPlayer->team_id;
+        $replacementPlayer->team = $currentPlayer->team;
+
+
+        $replacementPlayer->save();
         $currentPlayer->save();
 
-        $replacementPlayer->starting = true;
-        $replacementPlayer->save();
         return response([
-            'status' => true
+            'status' => true,
+            'message' => 'squad updated'
         ], 200);
     }
 
     public function swapplayer(Request $request)
     {
-
-        $currentPlayer = GamerSquad::where('player_id',$request->current_player_id)->first();
+        $record = $this->getmysquadcount();
+        $currentPlayer = GamerSquad::where('player_id', $request->current_player_id)->first();
         $player  = $this->getplayerbyid($request->replacement_player_id);
-       if( $currentPlayer->position_id != $player['position_id']) return response('Unacceptable',403);
+        if ($currentPlayer->position_id != $player['position_id']) return response('Unacceptable', 403);
+        $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
+        if ($checkforsameteam['status'] == 'max') {
+            return response('can not have more than 4 players from same team', 422);
+        }
+
+
         $currentPlayer->player_name =  $player['display_name'];
         $currentPlayer->player_position  =  $this->getPosition($player['position_id']);
         $currentPlayer->player_id = $player['player_id'];
         $currentPlayer->position_id = $player['position_id'];
-        $currentPlayer->value = 100;
+        $currentPlayer->value = 100000;
         $currentPlayer->team_id = $player['team_id'];
         $currentPlayer->team = $player['team']['data']['name'];
         $currentPlayer->image_path = $player['image_path'];
         $currentPlayer->save();
-        return $currentPlayer;
+        return response(['status' => true, 'message' => 'squad updated'], 200);
     }
     public function removeplayer(gamerSquad $gamerSquad)
     {
@@ -372,7 +456,7 @@ class LeagueController extends Controller
     public function searchleaguebyname(Request $request)
     {
         try {
-            $query = $request->query('search');
+            $query = $request->query('query');
             $response = Http::get(
                 $this->url . '/leagues/search/' . $query,
                 ['api_token' => $this->apikey]
@@ -387,7 +471,7 @@ class LeagueController extends Controller
     public function searchteambyname(Request $request)
     {
         try {
-            $query = $request->query('search');
+            $query = $request->query('query');
             $response = Http::get(
                 $this->url . '/teams/search/' . $query,
                 ['api_token' => $this->apikey]
@@ -401,7 +485,7 @@ class LeagueController extends Controller
     public function searchplayerbyname(Request $request)
     {
         try {
-            $query = $request->query('search');
+            $query = $request->query('query');
             $response = Http::get(
                 $this->url . '/players/search/' . $query,
                 ['api_token' => $this->apikey]
@@ -452,8 +536,11 @@ class LeagueController extends Controller
         try {
             $response = Http::get(
                 $this->url . "/players/" . $id,
-                ['api_token' => $this->apikey,
-                'include'=> 'team']
+                [
+                    'api_token' => $this->apikey,
+                    'include' => 'team,stats',
+                    'seasons' => $this->previous_season_id
+                ]
             );
             return $response['data'];
         } catch (\Throwable $th) {
@@ -480,6 +567,7 @@ class LeagueController extends Controller
                 'duration'  => 'required',
                 'start'  => 'required',
                 'end'  => 'required',
+                'winner_type' => 'required'
             ]);
 
             if ($validator->fails()) {
@@ -534,12 +622,60 @@ class LeagueController extends Controller
     public function joinleague(League $league)
     {
         $user = auth()->user();
-        $league->users()->attach($user->id);
-        return response([
-            'status' => true,
-            'message' => 'success',
+        $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
+        if ($league->status =='active') return response('already started');
+        if (!is_null($isInLeague)) return response('already member');
+        if ($league->type == 'public') {
+            $league->users()->attach($user->id);
+            $league->leaguetable()->create([
+                'user_id' => $user->id,
+                'points' => 0,
+                'gameweek' => 0,
+                'rank' => 1
+            ]);
+            return response([
+                'status' => true,
+                'message' => 'success',
 
-        ]);
+            ]);
+        } else {
+            return response([
+                'status' => false,
+                'message' => 'error',
+
+            ]);
+        }
+    }
+    public function joinprivateleague(Request $request)
+    {
+        $user = auth()->user();
+        $league = League::find($request->id);
+        $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
+        if ($league->type == 'private') {
+
+        if ($league->code !== $request->code) return response('invalid code');
+        if ($league->status == 'active') return response('already started');
+        if (!is_null($isInLeague)) return response('already member');
+
+            $league->users()->attach($user->id);
+            $league->leaguetable()->create([
+                'user_id' => $user->id,
+                'points' => 0,
+                'gameweek' => 0,
+                'rank' => 1
+            ]);
+            return response([
+                'status' => true,
+                'message' => 'success',
+
+            ]);
+        } else {
+            return response([
+                'status' => false,
+                'message' => 'league code required',
+
+            ]);
+        }
     }
     public function getleagueusers(League $league)
     {
@@ -552,16 +688,11 @@ class LeagueController extends Controller
 
         ]);
     }
-    public function getuserleagues(League $league)
+    public function getuserleagues()
     {
         $user = auth('sanctum')->user();
-        $data =  $user->leagues()->get();
-        return response([
-            'status' => true,
-            'message' => 'success',
-            'data'  => UserLeaguesResource::collection($data)
+        return  $data =  LeagueResource::collection($user->leagues()->get());
 
-        ]);
     }
 
     public function destroy(League $league)
@@ -578,5 +709,86 @@ class LeagueController extends Controller
 
             ], 500);
         }
+    }
+
+
+    public function getallplayers($position_id)
+    {
+
+        try {
+            if ($position_id > 4 || $position_id <= 0) {
+                return   [
+                    'status' => false,
+                    'message' => 'incorrect position id'
+                ];
+            }
+            $response = Http::get(
+                $this->url . "/teams/season/" . $this->current_season_id,
+                [
+                    'api_token' => $this->apikey,
+                    'include' => 'squad.player',
+
+                ]
+            );
+
+            $squads = collect($response['data'])->map(function ($a) {
+                return   $a['squad']['data'];
+            });
+            $arraypla = [];
+
+            //Flatten array of players
+            $mergedlist = array_merge(...$squads);
+
+            $playerlist = collect($mergedlist)->map(function ($b) {
+                if (array_key_exists('player', $b)) {
+                    return    [
+                        'player_id' => $b['player_id'],
+                        'position_id' => $b['position_id'],
+                        'is_injured' => $b['injured'],
+                        'rating' => $b['rating'],
+                        'position' =>  $this->getPosition($b['position_id']),
+                        'image_path' => $b['player']['data']['image_path'],
+                        'team_id' => $b['player']['data']['team_id'],
+                        'display_name' => $b['player']['data']['display_name'],
+                        'nationality' => $b['player']['data']['nationality'],
+                        'height' => $b['player']['data']['height'],
+                        'weight' => $b['player']['data']['weight']
+                    ];
+                }
+            });
+
+            return $playerlist->filter(function ($c) use ($position_id) {
+
+                return $c && intval($c['position_id']) === intval($position_id);
+            })->values()->all();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function selectcaptain(gamerSquad $gamerSquad)
+    {
+        $previousCaptain = GamerSquad::where('is_captain', true)->first();
+        if (!is_null($previousCaptain)) {
+            $previousCaptain->is_captain = false;
+            $previousCaptain->save();
+        }
+
+        $gamerSquad->is_vice_captain = false;
+        $gamerSquad->is_captain = true;
+        $gamerSquad->save();
+        return response('captain updated', 200);
+    }
+    public function selectvicecaptain(gamerSquad $gamerSquad)
+    {
+        $previousCaptain = GamerSquad::where('is_vice_captain', true)->first();
+        if (!is_null($previousCaptain)) {
+            $previousCaptain->is_vice_captain = false;
+            $previousCaptain->save();
+        }
+        $gamerSquad->is_captain = false;
+        $gamerSquad->is_vice_captain = true;
+        $gamerSquad->save();
+        return response('vice captain updated', 200);
     }
 }

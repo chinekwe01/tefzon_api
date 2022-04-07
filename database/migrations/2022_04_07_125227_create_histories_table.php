@@ -13,13 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('gameweek_points', function (Blueprint $table) {
+        Schema::create('histories', function (Blueprint $table) {
             $table->id();
-            $table->integer('point');
+
             $table->integer('points');
             $table->integer('gameweek');
             $table->foreignId('user_id')->onDelete('cascade')->onUpdate('cascade');
+
+            $table->bigInteger('deleted_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -30,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('gameweek_points');
+        Schema::dropIfExists('histories');
     }
 };
