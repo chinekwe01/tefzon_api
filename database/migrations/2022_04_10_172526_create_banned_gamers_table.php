@@ -13,10 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('leagues', function (Blueprint $table) {
-            $table->string('winner_type')->default('triple');
-            $table->integer('entry_fee')->nullable();
-            $table->integer('winning_amount')->nullable();
+        Schema::create('banned_gamers', function (Blueprint $table) {
+            $table->id();
+            $table->string('message');
+            $table->foreignId('user_id');
+            $table->string('duration');
+            $table->string('start');
+            $table->string('end');
+            $table->timestamps();
         });
     }
 
@@ -27,8 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('leagues', function (Blueprint $table) {
-            $table->dropColumn('winner_type', 'entry_fee', 'winning_amount');
-        });
+        Schema::dropIfExists('banned_gamers');
     }
 };

@@ -17,7 +17,9 @@ class League extends Model
         'end',
         'status',
         'code',
-        'winner_type'
+        'winner_type',
+        'entry_fee',
+        'winning_amount'
     ];
     protected $hidden = [
 

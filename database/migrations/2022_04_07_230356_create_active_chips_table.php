@@ -13,10 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('leagues', function (Blueprint $table) {
-            $table->string('winner_type')->default('triple');
-            $table->integer('entry_fee')->nullable();
-            $table->integer('winning_amount')->nullable();
+        Schema::create('active_chips', function (Blueprint $table) {
+            $table->id();
+            $table->string('start');
+            $table->string('end');
+            $table->string('chip');
+            $table->string('status');
+            $table->foreignId('user_id');
+            $table->timestamps();
         });
     }
 
@@ -27,8 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('leagues', function (Blueprint $table) {
-            $table->dropColumn('winner_type', 'entry_fee', 'winning_amount');
-        });
+        Schema::dropIfExists('active_chips');
     }
 };

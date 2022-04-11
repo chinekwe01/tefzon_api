@@ -9,9 +9,11 @@ use App\Mail\OtpRequest;
 use App\Mail\WelcomeGamer;
 use App\Mail\PasswordReset;
 use Illuminate\Support\Str;
+use App\Jobs\VerifyEmailJob;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use App\Notifications\NewReferral;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\GamerResource;
 use App\Notifications\PasswordChanged;
+use App\Notifications\UserIntroduction;
 use App\Notifications\LoginNotification;
 use Illuminate\Support\Facades\Validator;
 
@@ -73,11 +76,44 @@ class UserController extends Controller
                     'name' => $user->name,
                     'username' => $user->username,
                 ];
-                dispatch(new \App\Jobs\WelcomeGamerJob($data));
 
+                //send welcome email
+                dispatch(new \App\Jobs\WelcomeGamerJob($data));
+                $code = Str::random(40);
+
+               // send email verification email
+                DB::table('password_resets')->insert(
+                    ['email' => $request->email, 'token' => $code, 'created_at' => Carbon::now()]
+                );
+                $detail = [
+                    'email' => $user->email,
+                    'url'=> 'https://tefzon.com/verify-email?token='. $code.'&new_user='.$user->username
+                ];
+                dispatch(new \App\Jobs\VerifyEmailJob($detail));
+
+
+                //create chips data
                 $chips = new Chip();
                 $chips->user_id = $user->id;
                 $chips->save();
+
+
+                //Create extra account details
+                $account = new  AccountDetail();
+                $account->user_id = $user->id;
+                $account->save();
+
+                if($request->has('referral') && $request->filled('referral') && !is_null($request->referral)){
+                    $referral = new Referral();
+                    $referringUser= User::where('referral', $request->referral)->first();
+                    $referral->user_id = $referringUser->id;
+                    $referral->invited_user_id = $user->id;
+                    $referral->save();
+                    $referringUser->notify(new NewReferral($user));
+                }
+
+
+                $user->notify(new UserIntroduction($user));
                 return response([
                     'status' => true,
                     'message' => 'creation successful',
@@ -366,8 +402,46 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function verifyemail(Request $request){
+        $validator = Validator::make($request->all(), [
+
+            'token' => 'required',
+
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+
+            ], 422);
+        }
+
+
+        $verifyemail = DB::table('password_resets')
+            ->where(['token' => $request->token])
+            ->first();
+
+        if (!$verifyemail) {
+            return response()->json([
+                "success" => false,
+                "message" => 'Invalid request'
+
+            ], 500);
+        }
+        $user = User::where('email', $verifyemail->email)->first();
+        $user->email_verified_at = Carbon::now();
+        $user->save();
+        DB::table('password_resets')->where(['token' => $request->token])->delete();
+        return response()->json([
+            "success" => true,
+            "message" => 'verified'
+
+        ], 200);
+
+    }
     public function destroy(User $user)
     {
+
         try {
             $user->delete();
             return response()->json([

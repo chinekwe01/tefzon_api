@@ -307,7 +307,7 @@ class PointController extends Controller
     }
     public function checkfixtures()
     {
-        $date = '2022-04-02';
+        $date = Carbon::now()->format('Y-m-d');
         $response = Http::get(
             $this->url . '/fixtures/date/' . $date,
             [

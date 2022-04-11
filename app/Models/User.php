@@ -53,6 +53,31 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function withdraw_requests()
+    {
+        return $this->hasMany(WithdrawRequest::class);
+    }
+    public function active_chips()
+    {
+        return $this->hasMany(ActiveChip::class);
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class);
+    }
+
+    public function accountdetails()
+    {
+        return $this->hasOne(AccountDetail::class);
+    }
+
     public function socialaccounts()
     {
         return $this->hasMany(LinkedSocialAccount::class);

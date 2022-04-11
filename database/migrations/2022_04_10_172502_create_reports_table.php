@@ -13,10 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('leagues', function (Blueprint $table) {
-            $table->string('winner_type')->default('triple');
-            $table->integer('entry_fee')->nullable();
-            $table->integer('winning_amount')->nullable();
+        Schema::create('reports', function (Blueprint $table) {
+            $table->id();
+            $table->string('message');
+            $table->foreignId('user_id');
+            $table->foreign('reported_user_id')->references('id')->on('users');
+            $table->table('status')->default('pending');
+            $table->timestamps();
         });
     }
 
@@ -27,8 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('leagues', function (Blueprint $table) {
-            $table->dropColumn('winner_type', 'entry_fee', 'winning_amount');
-        });
+        Schema::dropIfExists('reports');
     }
 };

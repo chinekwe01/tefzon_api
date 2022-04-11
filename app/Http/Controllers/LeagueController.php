@@ -6,6 +6,7 @@ use stdClass;
 use App\Models\League;
 use App\Models\GamerSquad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use App\Http\Resources\LeagueResource;
@@ -623,7 +624,7 @@ class LeagueController extends Controller
     {
         $user = auth()->user();
         $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
-        if ($league->status =='active') return response('already started');
+        if ($league->status == 'active') return response('already started');
         if (!is_null($isInLeague)) return response('already member');
         if ($league->type == 'public') {
             $league->users()->attach($user->id);
@@ -653,9 +654,9 @@ class LeagueController extends Controller
         $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
         if ($league->type == 'private') {
 
-        if ($league->code !== $request->code) return response('invalid code');
-        if ($league->status == 'active') return response('already started');
-        if (!is_null($isInLeague)) return response('already member');
+            if ($league->code !== $request->code) return response('invalid code');
+            if ($league->status == 'active') return response('already started');
+            if (!is_null($isInLeague)) return response('already member');
 
             $league->users()->attach($user->id);
             $league->leaguetable()->create([
@@ -692,7 +693,6 @@ class LeagueController extends Controller
     {
         $user = auth('sanctum')->user();
         return  $data =  LeagueResource::collection($user->leagues()->get());
-
     }
 
     public function destroy(League $league)
@@ -790,5 +790,39 @@ class LeagueController extends Controller
         $gamerSquad->is_vice_captain = true;
         $gamerSquad->save();
         return response('vice captain updated', 200);
+    }
+
+
+    public function getleaguebyfilter(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'filter_type' => 'required',
+            'filter_value' => 'required',
+
+        ]);
+
+
+        if ($request->filter_type == 'date') {
+            return League::whereBetween('start', [Carbon::now(), Carbon::parse($request->filter_value)])->get();
+        }
+        if ($request->filter_type == 'entry_fee') {
+            return League::whereBetween('entry_fee',[0, $request->filter_value])->get();
+        }
+        if ($request->filter_type == 'winning_type') {
+            return League::where('winning_type', $request->filter_value)->get();
+        }
+        if ($request->filter_type == 'winner_amount') {
+            return League::whereBetween('winning_amount', [0, $request->filter_value])->get();
+        }
+        if ($request->filter_type == 'participants') {
+            return League::where('participants', $request->filter_value)->get();
+        }
+        if ($request->filter_type == 'type') {
+            return League::whereLike('type', $request->filter_value)->get();
+        }
+        if ($request->filter_type == 'name') {
+            return League::whereLike('name', $request->filter_value)->get();
+        }
     }
 }
