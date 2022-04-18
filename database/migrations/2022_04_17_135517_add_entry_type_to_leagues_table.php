@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('referrals', function (Blueprint $table) {
-           // $table->renameColumn('referral','invited_user_id')->change();
+        Schema::table('leagues', function (Blueprint $table) {
+            $table->string('entry_type')->default('free');
         });
     }
 
@@ -25,8 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('referrals', function (Blueprint $table) {
-
+        Schema::table('leagues', function (Blueprint $table) {
+            $table->dropColumn('entry_type');
         });
     }
 };

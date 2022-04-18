@@ -23,6 +23,9 @@ class LeagueResource extends JsonResource
             "duration" => $this->duration,
             "start" => $this->start,
             "end" => $this->end,
+            "winner_type" => $this->winner_type,
+            "entry_fee" => $this->entry_fee,
+            "winning_amount" => $this->winning_amount,
             "status" => $this->status,
             "is_owner" => $this->pivot->is_owner,
         ];

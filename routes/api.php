@@ -6,9 +6,11 @@ use App\Http\Controllers\ChipController;
 use App\Http\Controllers\PointController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\BannedGamerController;
+use App\Http\Controllers\LeagueOverviewController;
 use App\Http\Controllers\LinkedSocialAccountController;
 
 /*
@@ -52,11 +54,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // League route
     Route::apiResource('leagues', LeagueController::class);
-
-   // Gamer api
+    Route::get('get-league-table/{league}', [PointController::class, 'getleaguetable']);
+    Route::get('league/users/{league}', [LeagueController::class, 'getleagueusers']);
+    // Gamer api
 
     Route::middleware('ability:role-gamer')->group(function () {
-        Route::get('league/users/{league}', [LeagueController::class, 'getleagueusers']);
+
         Route::get('user/leagues', [LeagueController::class, 'getuserleagues']);
         Route::get('join/public/league/{league}', [LeagueController::class, 'joinleague']);
         Route::post('join/private/league', [LeagueController::class, 'joinprivateleague']);
@@ -92,29 +95,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('handle/points', [PointController::class, 'handlepoints']);
         Route::get('squad-with-points', [PointController::class, 'squadwithpoint']);
         Route::get('squad-with-points/{gameweek}', [PointController::class, 'specificweekpoint']);
-        Route::get('check-fixtures', [PointController::class, 'checkfixtures']);
-        Route::get('add-points-to-league', [PointController::class, 'addpointstoleague']);
-        Route::get('get-league-table/{league}', [PointController::class, 'getleaguetable']);
+
+
         Route::post('search-league-by', [LeagueController::class, 'getleaguebyfilter']);
 
 
         //create report
-        Route::post('reports', [ReportController::class, 'store']);
+        Route::post('add-report', [ReportController::class, 'store']);
 
 
         //Referrals api
         Route::apiResource('referrals', ReferralController::class);
 
 
-
         //Withdraw requests api
-        Route::get('pending-withdraw-requests', [WithdrawRequestController::class, 'pendingwithdraw']);
-        Route::get('approved-withdraw-requests', [WithdrawRequestController::class, 'approvedwithdraw']);
-        Route::get('failed-withdraw-requests', [WithdrawRequestController::class, 'failedwithdraw']);
-        Route::get('get-account-details', [WithdrawRequestController::class, 'getaccountdetails']);
-        Route::apiResource('withdraw-requests', WithdrawRequestController::class);
+        Route::get('pending-withdraw-requests', [AccountController::class, 'pendingwithdraw']);
+        Route::get('approved-withdraw-requests', [AccountController::class, 'approvedwithdraw']);
+        Route::get('failed-withdraw-requests', [AccountController::class, 'failedwithdraw']);
+        Route::get('get-account-details', [AccountController::class, 'getaccountdetails']);
+        Route::apiResource('withdraw-requests', AccountController::class);
+
 
         Route::post('activate-chip', [ChipController::class, 'store']);
+        Route::get('confirm-transfer', [LeagueController::class, 'confirmtransfer']);
+        Route::post('use-freehit', [PointController::class, 'usefreehit']);
+        Route::post('confirm-squad', [PointController::class, 'addplayer']);
     });
 
 
@@ -122,9 +127,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('ability:role-admin')->group(function () {
 
         //Withdraw requests api
-        Route::get('admin-pending-withdraw-requests', [WithdrawRequestController::class, 'getpending_withdraw_requests_foradmin']);
-        Route::get('admin-approved-withdraw-requests', [WithdrawRequestController::class, 'getapproved_withdraw_requests_foradmin']);
-        Route::get('admin-failed-withdraw-requests', [WithdrawRequestController::class, 'getfailed_withdraw_requests_foradmin']);
+        Route::get('admin-pending-withdraw-requests', [AccountController::class, 'getpending_withdraw_requests_foradmin']);
+        Route::get('admin-approved-withdraw-requests', [AccountController::class, 'getapproved_withdraw_requests_foradmin']);
+        Route::get('admin-failed-withdraw-requests', [AccountController::class, 'getfailed_withdraw_requests_foradmin']);
 
         // Banned gamers
         Route::apiResource('banned-gamers', BannedGamerController::class);
@@ -136,12 +141,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         //Get Statistics Report
-        Route::get('pending-leagues', [ReportController::class, 'pendingleagues']);
-        Route::get('active-leagues', [ReportController::class, 'activeleagues']);
-        Route::get('ended-leagues', [ReportController::class, 'endedleagues']);
-        Route::get('cancelled-leagues', [ReportController::class, 'cancelledleagues']);
+        Route::get('pending-leagues', [LeagueOverviewController::class, 'pendingleagues']);
+        Route::get('active-leagues', [LeagueOverviewController::class, 'activeleagues']);
+        Route::get('ended-leagues', [LeagueOverviewController::class, 'endedleagues']);
+        Route::get('cancelled-leagues', [LeagueOverviewController::class, 'cancelledleagues']);
 
+        //After league overview
+        Route::get('get-overview/{id}', [LeagueOverviewController::class, 'getleagueoverview']);
+        Route::get('handle-overview/{id}', [LeagueOverviewController::class, 'handleLeagueEnding']);
+        Route::get('handle-overview-status/{id}', [LeagueOverviewController::class, 'handleoverviewstatus']);
+
+        Route::get('check-fixtures', [PointController::class, 'checkfixtures']);
+        Route::get('add-points-to-league', [PointController::class, 'addpointstoleague']);
     });
 });
-
-

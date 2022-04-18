@@ -16,6 +16,9 @@ class ActiveChip extends Model
     }
     protected $fillable = [
         'user_id',
-        'chip'
+        'chip',
+        'start',
+        'end',
+        'status'
     ];
 }

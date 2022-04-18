@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chip;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class ChipController extends Controller
 {
@@ -20,7 +23,7 @@ class ChipController extends Controller
 
     public function index()
     {
-       return $this->user->active_chips();
+        return $this->user->active_chips();
     }
 
     /**
@@ -42,11 +45,66 @@ class ChipController extends Controller
 
             ], 422);
         }
+        $available = Chip::where('user_id', $this->user->id)->first();
+        switch ($request->chip) {
+            case 'wildcard':
+                if ($available->wildcard > 0) {
+                    $available->wildcard =  $available->wildcard - 1;
+                } else {
+                    return response([
+                        'status' => false,
+                        'message' => 'not allowed'
+                    ], 403);
+                }
+                break;
+
+            case 'free_hit':
+                if ($available->free_hit > 0) {
+                    $available->freehit =  $available->free_hit - 1;
+                } else {
+                    return response([
+                        'status' => false,
+                        'message' => 'not allowed'
+                    ], 403);
+                }
+                break;
+            case 'bench_boost':
+                if ($available->bench_boost > 0) {
+                    $available->bench_boost =  $available->bench_boost - 1;
+                } else {
+                    return response([
+                        'status' => false,
+                        'message' => 'not allowed'
+                    ], 403);
+                }
+                break;
+            case 'triple_captain':
+                if ($available->triple_captain > 0) {
+                    $available->triple_captain =  $available->triple_captain - 1;
+                } else {
+                    return response([
+                        'status' => false,
+                        'message' => 'not allowed'
+                    ], 403);
+                }
+                break;
+
+            default:
+                # code...
+                break;
+        }
 
         $this->user->active_chips()->create([
             'chip' => $request->chip,
+            'start' => Carbon::now(),
+            'end' => Carbon::now()->addweeks(),
+            'status' => true
 
         ]);
+
+         ///   save updated chips
+        $available->save();
+
         return response([
             'success' => true,
             'message' => 'request sent'

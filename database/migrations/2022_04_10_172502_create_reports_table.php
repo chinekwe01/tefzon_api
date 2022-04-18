@@ -17,8 +17,9 @@ return new class extends Migration
             $table->id();
             $table->string('message');
             $table->foreignId('user_id');
-            $table->foreign('reported_user_id')->references('id')->on('users');
-            $table->table('status')->default('pending');
+            $table->unsignedBigInteger('reported_user_id');
+            $table->foreign('reported_user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

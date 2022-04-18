@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use stdClass;
+use App\Models\Chip;
 use App\Models\League;
+use App\Models\ActiveChip;
 use App\Models\GamerSquad;
+use App\Models\FreeHitSquad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -109,29 +112,56 @@ class LeagueController extends Controller
     public function getmysquad()
     {
 
-        $defenders = $this->user->defenders();
-        $midfielders = $this->user->midfielders();
-        $goalkeepers = $this->user->goalkeepers();
-        $forwards = $this->user->forwards();
+        $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
+        if (!is_null($free_hit)) {
+            $defenders = $this->user->defenders();
+            $midfielders = $this->user->midfielders();
+            $goalkeepers = $this->user->goalkeepers();
+            $forwards = $this->user->forwards();
 
 
-        return [
-            'goalkeepers' => $goalkeepers->filter(function ($a) {
-                return $a->starting;
-            })->values()->all(),
-            'defenders' => $defenders->filter(function ($a) {
-                return $a->starting;
-            })->values()->all(),
-            'midfielders' => $midfielders->filter(function ($a) {
-                return $a->starting;
-            })->values()->all(),
-            'forwards' => $forwards->filter(function ($a) {
-                return $a->starting;
-            })->values()->all(),
-            'subs' => $this->user->squad()->get()->filter(function ($a) {
-                return !$a->starting;
-            })->values()->all(),
-        ];
+            return [
+                'goalkeepers' => $goalkeepers->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'defenders' => $defenders->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'midfielders' => $midfielders->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'forwards' => $forwards->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'subs' => $this->user->squad()->get()->filter(function ($a) {
+                    return !$a->starting;
+                })->values()->all(),
+            ];
+        } else {
+            $defenders = $this->user->freedefenders();
+            $midfielders = $this->user->freemidfielders();
+            $goalkeepers = $this->user->freegoalkeepers();
+            $forwards = $this->user->freeforwards();
+
+
+            return [
+                'goalkeepers' => $goalkeepers->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'defenders' => $defenders->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'midfielders' => $midfielders->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'forwards' => $forwards->filter(function ($a) {
+                    return $a->starting;
+                })->values()->all(),
+                'subs' => $this->user->freesquad()->get()->filter(function ($a) {
+                    return !$a->starting;
+                })->values()->all(),
+            ];
+        }
     }
     public function getgoalkeepers()
     {
@@ -225,6 +255,11 @@ class LeagueController extends Controller
     }
     public function addplayer(Request $request)
     {
+        $chip =  ActiveChip::where('user_id', $this->user->id)->where('chip', 'wildcard')->first();
+        if (is_null($chip)) return response([
+            'status' => false,
+            'message' => 'not allowed'
+        ], 405);
 
         $validator = Validator::make(request()->all(), [
             'player_id' => 'required|numeric'
@@ -286,10 +321,17 @@ class LeagueController extends Controller
 
     public function selectsquad(Request $request)
     {
-
-        $startingCount =  $this->user->squad()->where('starting', 1)->count();
         $player_id = $request->player_id;
-        $player = GamerSquad::find($player_id);
+        $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
+        if (is_null($free_hit)) {
+            $startingCount =  $this->user->squad()->where('starting', 1)->count();
+            $player = GamerSquad::find($player_id);
+        } else {
+            $startingCount =  $this->user->freesquad()->where('starting', 1)->count();
+            $player = FreeHitSquad::find($player_id);
+        }
+
+
         if ($startingCount == 11) return response('squad set, replace active player', 422);
 
         if ($player->position_id == 1 &&  $this->checkstartingsquad($player) == 1) {
@@ -319,9 +361,15 @@ class LeagueController extends Controller
 
     public function substituteplayer(Request $request)
     {
+        $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
+        if (is_null($free_hit)) {
+            $currentPlayer = GamerSquad::find($request->current_player_id);
+            $replacementPlayer = GamerSquad::find($request->replacement_player_id);
+        } else {
+            $currentPlayer = FreeHitSquad::find($request->current_player_id);
+            $replacementPlayer = FreeHitSquad::find($request->replacement_player_id);
+        }
 
-        $currentPlayer = GamerSquad::find($request->current_player_id);
-        $replacementPlayer = GamerSquad::find($request->replacement_player_id);
 
         //create temp player
         $tempPlayer = new stdClass();
@@ -363,10 +411,20 @@ class LeagueController extends Controller
 
     public function swapplayer(Request $request)
     {
+        $chip =  Chip::where('user_id', $this->user->id)->first();
+        if ($chip->free_transfer == 0) {
+            return response([
+                'status' => false,
+                'message' => 'not allowed'
+            ], 405);
+        }
+        $chip->free_transfer = $chip->free_transfer - 1;
+        $chip->free_transfer->save();
+
         $record = $this->getmysquadcount();
         $currentPlayer = GamerSquad::where('player_id', $request->current_player_id)->first();
         $player  = $this->getplayerbyid($request->replacement_player_id);
-        if ($currentPlayer->position_id != $player['position_id']) return response('Unacceptable', 403);
+        if ($currentPlayer->position_id != $player['position_id']) return response('Unacceptable', 405);
         $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
         if ($checkforsameteam['status'] == 'max') {
             return response('can not have more than 4 players from same team', 422);
@@ -419,7 +477,7 @@ class LeagueController extends Controller
     {
 
         if ($gamerSquad->position_id == 1 && $request->squad_no != 1) {
-            return response('canoot be in position', 422);
+            return response('cannot be in position', 422);
         }
         $prevsquad = gamerSquad::where('position_id', $request->squad_no)->get();
 
@@ -559,38 +617,65 @@ class LeagueController extends Controller
 
     public function store(Request $request)
     {
-        try {
+      return DB::transaction(function () use ($request) {
+            try {
 
-            $validator = Validator::make($request->all(), [
-                'name' => 'required',
-                'participants' => 'required|numeric',
-                'type'  => 'required',
-                'duration'  => 'required',
-                'start'  => 'required',
-                'end'  => 'required',
-                'winner_type' => 'required'
-            ]);
+                $validator = Validator::make($request->all(), [
+                    'name' => 'required',
+                    'participants' => 'required|numeric',
+                    'type'  => 'required',
+                    'duration'  => 'required',
+                    'start'  => 'required',
+                    'winner_type' => 'required',
+                    'entry_type' => 'required'
+                ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'errors' => $validator->errors(),
+                if ($validator->fails()) {
+                    return response()->json([
+                        'errors' => $validator->errors(),
 
-                ], 422);
+                    ], 422);
+                }
+                if ($request->entry_type == 'paid') {
+                    $account = $this->user->accountdetails()->first();
+                    if ($account->balance < $request->entry_fee) {
+                        return response([
+                            'status' => false,
+                            'message' => 'insufficient balance'
+                        ], 405);
+                    }
+                    $account->balance = $account->balance - $request->entry_fee;
+                    $account->save();
+                }
+
+                $user = auth('sanctum')->user();
+                $info = $request->all();
+                $info['status'] = 'pending';
+                $info['winning_amount'] = $request->entry_fee;
+                if ($request->duration == 'week') {
+                    $info['end'] = Carbon::parse($request->start)->addWeek();
+                }
+                if ($request->duration == '2 weeks') {
+                    $info['end'] = Carbon::parse($request->start)->addWeek(2);
+                }
+                if ($request->duration == 'month') {
+                    $info['end']  = Carbon::parse($request->start)->addMonth();
+                }
+                if ($request->duration == '6 month') {
+                    $info['end']  = Carbon::parse($request->start)->addMonth(6);
+                }
+
+                $info['code'] = rand(00000, 99999);
+                $league = $user->leagues()->create($info);
+                $league->users()->updateExistingPivot($user->id, ['is_owner' => true]);
+                return response([
+                    'status' => true,
+                    'message' => 'success',
+
+                ]);
+            } catch (Exception $e) {
             }
-
-            $user = auth('sanctum')->user();
-            $info = $validator->validated();
-            $info['status'] = 'pending';
-            $info['code'] = rand(00000, 99999);
-            $league = $user->leagues()->create($info);
-            $league->users()->updateExistingPivot($user->id, ['is_owner' => true]);
-            return response([
-                'status' => true,
-                'message' => 'success',
-                'data' => $league
-            ]);
-        } catch (Exception $e) {
-        }
+      });
     }
     public function update(Request $request, League $league)
     {
@@ -622,61 +707,96 @@ class LeagueController extends Controller
     }
     public function joinleague(League $league)
     {
-        $user = auth()->user();
-        $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
-        if ($league->status == 'active') return response('already started');
-        if (!is_null($isInLeague)) return response('already member');
-        if ($league->type == 'public') {
-            $league->users()->attach($user->id);
-            $league->leaguetable()->create([
-                'user_id' => $user->id,
-                'points' => 0,
-                'gameweek' => 0,
-                'rank' => 1
-            ]);
-            return response([
-                'status' => true,
-                'message' => 'success',
-
-            ]);
-        } else {
-            return response([
-                'status' => false,
-                'message' => 'error',
-
-            ]);
-        }
-    }
-    public function joinprivateleague(Request $request)
-    {
-        $user = auth()->user();
-        $league = League::find($request->id);
-        $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
-        if ($league->type == 'private') {
-
-            if ($league->code !== $request->code) return response('invalid code');
+       return DB::transaction(function () use ($league) {
+            $user = auth()->user();
+            $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
             if ($league->status == 'active') return response('already started');
             if (!is_null($isInLeague)) return response('already member');
 
-            $league->users()->attach($user->id);
-            $league->leaguetable()->create([
-                'user_id' => $user->id,
-                'points' => 0,
-                'gameweek' => 0,
-                'rank' => 1
-            ]);
-            return response([
-                'status' => true,
-                'message' => 'success',
+            if ($league->entry_type == 'paid') {
+                   $account = $this->user->accountdetails()->first();
+                if ($account->balance < $league->entry_fee) {
+                    return response([
+                        'status' => false,
+                        'message' => 'insufficient balance'
+                    ], 405);
+                }
+                $account->balance = $account->balance - $league->entry_fee;
+                $account->save();
 
-            ]);
-        } else {
-            return response([
-                'status' => false,
-                'message' => 'league code required',
+                $league->winning_amount = $league->winning_amount + $league->entry_fee;
+                $league->save();
+            }
+            if ($league->type == 'public') {
 
-            ]);
-        }
+                $league->users()->attach($user->id);
+                $league->leaguetable()->create([
+                    'user_id' => $user->id,
+                    'points' => 0,
+                    'gameweek' => 0,
+                    'rank' => 1
+                ]);
+                return response([
+                    'status' => true,
+                    'message' => 'success',
+
+                ]);
+            } else {
+                return response([
+                    'status' => false,
+                    'message' => 'error',
+
+                ]);
+            }
+       });
+    }
+    public function joinprivateleague(Request $request)
+    {
+       return DB::transaction(function () use ($request) {
+            $user = auth()->user();
+            $league = League::find($request->id);
+            $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
+
+            if ($league->type == 'private') {
+
+                if ($league->code !== $request->code) return response('invalid code');
+                if ($league->status == 'active') return response('already started');
+                if (!is_null($isInLeague)) return response('already member');
+                if ($league->entry_type == 'paid') {
+                    $account = $this->user->accountdetails()->first();
+                    if ($account->balance < $league->entry_fee) {
+                        return response([
+                            'status' => false,
+                            'message' => 'insufficient balance'
+                        ], 405);
+                    }
+                    $account->balance = $account->balance - $league->entry_fee;
+                    $account->save();
+
+                    $league->winning_amount = $league->winning_amount + $league->entry_fee;
+                    $league->save();
+                }
+
+                $league->users()->attach($user->id);
+                $league->leaguetable()->create([
+                    'user_id' => $user->id,
+                    'points' => 0,
+                    'gameweek' => 0,
+                    'rank' => 1
+                ]);
+                return response([
+                    'status' => true,
+                    'message' => 'success',
+
+                ]);
+            } else {
+                return response([
+                    'status' => false,
+                    'message' => 'league code required',
+
+                ]);
+            }
+       });
     }
     public function getleagueusers(League $league)
     {
@@ -692,7 +812,7 @@ class LeagueController extends Controller
     public function getuserleagues()
     {
         $user = auth('sanctum')->user();
-        return  $data =  LeagueResource::collection($user->leagues()->get());
+        return  $data =  LeagueResource::collection($user->leagues()->paginate(15));
     }
 
     public function destroy(League $league)
@@ -807,7 +927,7 @@ class LeagueController extends Controller
             return League::whereBetween('start', [Carbon::now(), Carbon::parse($request->filter_value)])->get();
         }
         if ($request->filter_type == 'entry_fee') {
-            return League::whereBetween('entry_fee',[0, $request->filter_value])->get();
+            return League::whereBetween('entry_fee', [0, $request->filter_value])->get();
         }
         if ($request->filter_type == 'winning_type') {
             return League::where('winning_type', $request->filter_value)->get();
@@ -824,5 +944,22 @@ class LeagueController extends Controller
         if ($request->filter_type == 'name') {
             return League::whereLike('name', $request->filter_value)->get();
         }
+    }
+
+    public function confirmtransfer()
+    {
+        $activechip =  ActiveChip::where('user_id', $this->user->id)->where('chip', 'wildcard')->first();
+        if (!is_null($activechip)) {
+            $activechip->delete();
+        }
+
+
+        $chip =  Chip::where('user_id', $this->user->id)->first();
+        if ($chip->wildcard > 0) {
+            $chip->wildcard = $chip->wildcard - 1;
+        }
+        $chip->save();
+
+        return response('ok');
     }
 }

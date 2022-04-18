@@ -17,6 +17,7 @@ class BannedGamer extends Model
         'user_id',
         'start',
         'end',
-        'duration'
+        'duration',
+        'status'
     ];
 }

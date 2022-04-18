@@ -97,6 +97,13 @@ class UserController extends Controller
                 $chips->user_id = $user->id;
                 $chips->save();
 
+                $activechips = new ActiveChip();
+                $activechips->user_id = $user->id;
+                $activechips->chip = 'wildcard';
+                $activechips->start = Carbon::now();
+                $activechips->end = Carbon::now();
+                $activechips->save();
+
 
                 //Create extra account details
                 $account = new  AccountDetail();

@@ -18,19 +18,23 @@ class ReferralController extends Controller
     }
 
 
-    public function index($id)
+    public function index()
     {
-        $referrals =  ReferralResource::collection($this->user->referrals());
+
+          $referrals =  ReferralResource::collection($this->user->referrals()->get());
         return [
             'data' => $referrals,
-            'total' => $this->user->referrals()->count(),
+            'total' => $this->user->referrals()->get()->count(),
         ];
     }
+
+
+
 
     public function store($id)
     {
 
-        
+
         $this->user->referrals()->create([
             'invited_user_id' => $id,
 

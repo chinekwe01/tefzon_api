@@ -25,7 +25,7 @@ class AccountController extends Controller
     {
         return $this->user->withdraw_requests();
     }
-    
+
     public function getwithdraw_requests_foradmin()
     {
         return WithdrawRequest::get();
@@ -65,7 +65,7 @@ class AccountController extends Controller
 
     public function getaccountdetails()
     {
-        return $this->user->accountdetails();
+        return $this->user->accountdetails()->get();
     }
 
 

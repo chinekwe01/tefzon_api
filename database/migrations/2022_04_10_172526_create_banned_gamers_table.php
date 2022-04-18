@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('duration');
             $table->string('start');
             $table->string('end');
+            $table->boolean('status')->default(false);
             $table->timestamps();
         });
     }

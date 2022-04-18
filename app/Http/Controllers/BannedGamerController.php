@@ -51,6 +51,7 @@ class BannedGamerController extends Controller
             'start' => $request->start,
             'end' => $request->end,
             'duration' => $duration,
+            'status'=> true
 
 
         ]);

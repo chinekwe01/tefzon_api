@@ -67,6 +67,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(ActiveChip::class);
     }
+    public function histories()
+    {
+        return $this->hasMany(History::class);
+    }
+
 
     public function referrals()
     {
@@ -86,6 +91,10 @@ class User extends Authenticatable
     public function squad()
     {
         return $this->hasMany(GamerSquad::class);
+    }
+    public function freesquad()
+    {
+        return $this->hasMany(FreeHitSquad::class);
     }
     public function forwards()
     {
@@ -108,6 +117,31 @@ class User extends Authenticatable
     public function midfielders()
     {
         return $this->squad()->get()->filter(function ($a) {
+            return $a->position_id == 3;
+        });
+    }
+
+    public function freeforwards()
+    {
+        return $this->freesquad()->get()->filter(function ($a) {
+            return $a->position_id == 4;
+        });
+    }
+    public function freedefenders()
+    {
+        return $this->freesquad()->get()->filter(function ($a) {
+            return $a->position_id == 2;
+        });
+    }
+    public function freegoalkeepers()
+    {
+        return $this->freesquad()->get()->filter(function ($a) {
+            return $a->position_id == 1;
+        });
+    }
+    public function freemidfielders()
+    {
+        return $this->freesquad()->get()->filter(function ($a) {
             return $a->position_id == 3;
         });
     }

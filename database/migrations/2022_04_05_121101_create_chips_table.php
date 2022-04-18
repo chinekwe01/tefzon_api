@@ -15,9 +15,9 @@ return new class extends Migration
     {
         Schema::create('chips', function (Blueprint $table) {
             $table->id();
-            $table->integer('free_hit')->default(2);
+            $table->integer('free_hit')->default(1);
             $table->integer('bench_boost')->default(1);
-            $table->integer('wildcard')->default(1);
+            $table->integer('wildcard')->default(2);
             $table->integer('triple_captain')->default(1);
             $table->integer('free_transfer')->default(1);
             $table->bigInteger('budget')->default(100000000);
