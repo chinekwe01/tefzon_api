@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChipController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PointController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\ReportController;
@@ -126,6 +127,9 @@ Route::middleware('auth:sanctum')->group(function () {
     //Admin api
     Route::middleware('ability:role-admin')->group(function () {
 
+   //Cancel league
+        // Route::get('cancel-league/{league}', [LeagueController::class, 'cancelleague']);
+
         //Withdraw requests api
         Route::get('admin-pending-withdraw-requests', [AccountController::class, 'getpending_withdraw_requests_foradmin']);
         Route::get('admin-approved-withdraw-requests', [AccountController::class, 'getapproved_withdraw_requests_foradmin']);
@@ -155,3 +159,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('add-points-to-league', [PointController::class, 'addpointstoleague']);
     });
 });
+
+Route::get('cancel-league/{league}', [LeagueController::class, 'cancelleague']);
+
+Route::get('get-news', [NewsController::class, 'getnews']);
+Route::get('get-upcoming-news', [NewsController::class, 'getupcomingnews']);
+Route::get('get-season-news/{season_id}', [NewsController::class, 'getnewsbyseason']);
+
+
+Route::get('get-scores', [NewsController::class, 'getalllivescores']);
+
+Route::get('get-livescores', [NewsController::class, 'getlivscores']);

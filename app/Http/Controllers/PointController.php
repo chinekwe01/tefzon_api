@@ -377,7 +377,7 @@ class PointController extends Controller
             $now = Carbon::now();
             $fifteen = Carbon::now()->addMinutes(15);
             $startTime = Carbon::parse($sortedresults[0]['time']);
-            $minutesDiff = $fifteen->diffInMinutes($now);
+            $minutesDiff = $now->diffInMinutes($startTime);
             if ($minutesDiff <= 15) {
                 return  $this->lockteam($gameweek);
             } else {

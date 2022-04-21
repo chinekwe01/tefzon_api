@@ -13,9 +13,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use App\Http\Resources\LeagueResource;
+use App\Notifications\LeagueCancelled;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\LeagueUsersResource;
 use App\Http\Resources\UserLeaguesResource;
+use Illuminate\Support\Facades\Notification;
 
 class LeagueController extends Controller
 {
@@ -361,47 +363,53 @@ class LeagueController extends Controller
 
     public function substituteplayer(Request $request)
     {
+        $squads = $request->squads;
         $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        if (is_null($free_hit)) {
-            $currentPlayer = GamerSquad::find($request->current_player_id);
-            $replacementPlayer = GamerSquad::find($request->replacement_player_id);
-        } else {
-            $currentPlayer = FreeHitSquad::find($request->current_player_id);
-            $replacementPlayer = FreeHitSquad::find($request->replacement_player_id);
+        foreach($squads as $squad){
+            if (is_null($free_hit)) {
+                $currentPlayer = GamerSquad::find($squad['current_player_id']);
+                $replacementPlayer = GamerSquad::find($squad['replacement_player_id']);
+            } else {
+                $currentPlayer = FreeHitSquad::find($squad['current_player_id']);
+                $replacementPlayer = FreeHitSquad::find($squad['replacement_player_id']);
+            }
+
+
+            //create temp player
+            $tempPlayer = new stdClass();
+            $tempPlayer->player_name = $currentPlayer->player_name;
+            $tempPlayer->player_id =  $currentPlayer->player_id;
+            $tempPlayer->player_position = $currentPlayer->player_position;
+            $tempPlayer->position_id = $currentPlayer->position_id;
+            $tempPlayer->image_path = $currentPlayer->image_path;
+            $tempPlayer->team_id = $currentPlayer->team_id;
+            $tempPlayer->team = $currentPlayer->team;
+
+            //update current player
+            $currentPlayer->player_name = $replacementPlayer->player_name;
+            $currentPlayer->player_id = $replacementPlayer->player_id;
+            $currentPlayer->player_position = $replacementPlayer->player_position;
+            $currentPlayer->position_id = $replacementPlayer->position_id;
+            $currentPlayer->image_path = $replacementPlayer->image_path;
+            $currentPlayer->team_id = $currentPlayer->team_id;
+            $currentPlayer->team = $currentPlayer->team;
+
+            //update previous player
+            $replacementPlayer->player_name = $tempPlayer->player_name;
+            $replacementPlayer->player_id =  $tempPlayer->player_id;
+            $replacementPlayer->player_position = $tempPlayer->player_position;
+            $replacementPlayer->position_id = $tempPlayer->position_id;
+            $replacementPlayer->image_path = $tempPlayer->image_path;
+            $replacementPlayer->team_id = $currentPlayer->team_id;
+            $replacementPlayer->team = $currentPlayer->team;
+
+
+            $replacementPlayer->save();
+            $currentPlayer->save();
+
         }
 
 
-        //create temp player
-        $tempPlayer = new stdClass();
-        $tempPlayer->player_name = $currentPlayer->player_name;
-        $tempPlayer->player_id =  $currentPlayer->player_id;
-        $tempPlayer->player_position = $currentPlayer->player_position;
-        $tempPlayer->position_id = $currentPlayer->position_id;
-        $tempPlayer->image_path = $currentPlayer->image_path;
-        $tempPlayer->team_id = $currentPlayer->team_id;
-        $tempPlayer->team = $currentPlayer->team;
-
-        //update current player
-        $currentPlayer->player_name = $replacementPlayer->player_name;
-        $currentPlayer->player_id = $replacementPlayer->player_id;
-        $currentPlayer->player_position = $replacementPlayer->player_position;
-        $currentPlayer->position_id = $replacementPlayer->position_id;
-        $currentPlayer->image_path = $replacementPlayer->image_path;
-        $currentPlayer->team_id = $currentPlayer->team_id;
-        $currentPlayer->team = $currentPlayer->team;
-
-        //update previous player
-        $replacementPlayer->player_name = $tempPlayer->player_name;
-        $replacementPlayer->player_id =  $tempPlayer->player_id;
-        $replacementPlayer->player_position = $tempPlayer->player_position;
-        $replacementPlayer->position_id = $tempPlayer->position_id;
-        $replacementPlayer->image_path = $tempPlayer->image_path;
-        $replacementPlayer->team_id = $currentPlayer->team_id;
-        $replacementPlayer->team = $currentPlayer->team;
-
-
-        $replacementPlayer->save();
-        $currentPlayer->save();
 
         return response([
             'status' => true,
@@ -617,7 +625,7 @@ class LeagueController extends Controller
 
     public function store(Request $request)
     {
-      return DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request) {
             try {
 
                 $validator = Validator::make($request->all(), [
@@ -636,7 +644,7 @@ class LeagueController extends Controller
 
                     ], 422);
                 }
-                if ($request->entry_type == 'paid') {
+                if ($request->entry_type == 'paid' && !$this->user->is_admin) {
                     $account = $this->user->accountdetails()->first();
                     if ($account->balance < $request->entry_fee) {
                         return response([
@@ -675,7 +683,7 @@ class LeagueController extends Controller
                 ]);
             } catch (Exception $e) {
             }
-      });
+        });
     }
     public function update(Request $request, League $league)
     {
@@ -707,14 +715,14 @@ class LeagueController extends Controller
     }
     public function joinleague(League $league)
     {
-       return DB::transaction(function () use ($league) {
+        return DB::transaction(function () use ($league) {
             $user = auth()->user();
             $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
             if ($league->status == 'active') return response('already started');
             if (!is_null($isInLeague)) return response('already member');
 
             if ($league->entry_type == 'paid') {
-                   $account = $this->user->accountdetails()->first();
+                $account = $this->user->accountdetails()->first();
                 if ($account->balance < $league->entry_fee) {
                     return response([
                         'status' => false,
@@ -748,11 +756,11 @@ class LeagueController extends Controller
 
                 ]);
             }
-       });
+        });
     }
     public function joinprivateleague(Request $request)
     {
-       return DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request) {
             $user = auth()->user();
             $league = League::find($request->id);
             $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
@@ -796,7 +804,7 @@ class LeagueController extends Controller
 
                 ]);
             }
-       });
+        });
     }
     public function getleagueusers(League $league)
     {
@@ -961,5 +969,30 @@ class LeagueController extends Controller
         $chip->save();
 
         return response('ok');
+    }
+
+    public function cancelleague(League $league)
+    {
+
+        $league->status = 'canceled';
+        $league->save();
+
+        $users = $league->users()->get();
+        if ($league->entry_type == 'paid') {
+            foreach ($users as $user) {
+                $account =  $user->accountdetails()->first();
+                $account->balance = $account->balance + $league->entry_fee;
+                $account->save();
+            }
+        }
+        $detail = [
+            'body' => ucfirst($league->name) . ' league has been cancelled'
+        ];
+        Notification::send($users, new LeagueCancelled($detail));
+
+        return response([
+            'status' => true,
+            'message' => 'league cancelled'
+        ], 200);
     }
 }

@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
          $schedule->command('league:status')->everyFiveMinutes();
-       // $schedule->command('check:fixtures')->everyFiveMinutes();
+         $schedule->command('check:fixtures')->everyFiveMinutes();
     }
 
     /**

@@ -3,8 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\League;
+use App\Notifications\LeagueEnd;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
+use App\Notifications\LeagueStart;
+use Illuminate\Support\Facades\Notification;
 
 class HandleLeagueStatus extends Command
 {
@@ -49,6 +52,12 @@ class HandleLeagueStatus extends Command
             if ($now->gte($start) && $now->lte($end)) {
                 $league->status = 'active';
                 $league->save();
+
+                $users = $league->users()->get();
+                $detail = [
+                    'body' => ucfirst($league->name).' league has started'
+                ];
+                Notification::send($users, new LeagueStart($detail));
             }
         }
 
@@ -56,8 +65,16 @@ class HandleLeagueStatus extends Command
             $start = Carbon::parse($league->start);
             $end = Carbon::parse($league->end);
             if ($now->gte($end)) {
+                $handleending = new LeagueOverviewController();
+                $handleending->handleLeagueEnding($league->id);
                 $league->status = 'ended';
                 $league->save();
+
+                $users = $league->users()->get();
+                $detail = [
+                    'body' => ucfirst($league->name) . ' league has ended'
+                ];
+                Notification::send($users, new LeagueEnd($detail));
             }
         }
 
