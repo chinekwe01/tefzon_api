@@ -26,7 +26,13 @@ class User extends Authenticatable
         'phone',
         'is_admin',
         'avatar',
-        'referral_link'
+        'referral_link',
+        'last_name',
+        'first_name',
+        'gender',
+        'address',
+        'dob',
+        'country'
     ];
 
     /**
@@ -53,6 +59,11 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+
+    public function favourite_team()
+    {
+        return $this->hasOne(FavouriteTeam::class);
+    }
 
     public function reports()
     {
@@ -147,7 +158,9 @@ class User extends Authenticatable
     }
     public function totalvalue()
     {
-        return $this->squad()->get()->map(function ($a) {return $a->value;})->reduce(function ($a, $b) {
+        return $this->squad()->get()->map(function ($a) {
+            return $a->value;
+        })->reduce(function ($a, $b) {
             return $a + $b;
         }, 0);;
     }

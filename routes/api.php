@@ -90,12 +90,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('select/captain/{gamerSquad}', [LeagueController::class, 'selectcaptain']);
         Route::get('select/vice-captain/{gamerSquad}', [LeagueController::class, 'selectvicecaptain']);
 
+        //Select favourite team
+        Route::post('select/favourite-team', [TeamSelectionController::class, 'selectFavouriteTeam']);
+        Route::put('update/favourite-team/{favouriteTeam}', [TeamSelectionController::class, 'selectFavouriteTeam']);
+
 
         Route::put('sort/squad/{gamerSquad}', [LeagueController::class, 'sortsquad']);
         Route::get('sort/points', [LeagueController::class, 'sortplayerscores']);
         Route::get('handle/points', [PointController::class, 'handlepoints']);
         Route::get('squad-with-points', [PointController::class, 'squadwithpoint']);
-        Route::get('squad-with-points/{gameweek}', [PointController::class, 'specificweekpoint']);
+        Route::get('squad-with-points/{gameweek}', [PointController::class, 'updateTeam']);
 
 
         Route::post('search-league-by', [LeagueController::class, 'getleaguebyfilter']);

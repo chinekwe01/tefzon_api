@@ -395,6 +395,27 @@ class UserController extends Controller
             if ($request->has('avatar') && $request->filled('avatar') && !is_null($request->avatar)) {
                 $user->avatar = $request->avatar;
             }
+
+            if ($request->has('first_name') && $request->filled('first_name') && !is_null($request->first_name)) {
+                $user->first_name = $request->first_name;
+            }
+            if ($request->has('last_name') && $request->filled('last_name') && !is_null($request->last_name)) {
+                $user->last_name = $request->last_name;
+            }
+            if ($request->has('country') && $request->filled('country') && !is_null($request->country)) {
+                $user->country = $request->country;
+            }
+            if ($request->has('gender') && $request->filled('gender') && !is_null($request->gender)) {
+                $user->gender = $request->gender;
+            }
+
+            if ($request->has('address') && $request->filled('address') && !is_null($request->address)) {
+                $user->address = $request->address;
+            }
+            if ($request->has('dob') && $request->filled('dob') && !is_null($request->dob)) {
+                $user->dob = $request->dob;
+            }
+            
             $user->save();
             return response()->json([
                 'status' => true,
