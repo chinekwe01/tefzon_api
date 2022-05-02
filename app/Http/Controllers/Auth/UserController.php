@@ -6,11 +6,14 @@ use App\Models\Otp;
 use App\Models\Chip;
 use App\Models\User;
 use App\Mail\OtpRequest;
+use App\Models\Referral;
 use App\Mail\WelcomeGamer;
+use App\Models\ActiveChip;
 use App\Mail\PasswordReset;
 use Illuminate\Support\Str;
 use App\Jobs\VerifyEmailJob;
 use Illuminate\Http\Request;
+use App\Models\AccountDetail;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use App\Notifications\NewReferral;
@@ -99,6 +102,7 @@ class UserController extends Controller
 
                 $activechips = new ActiveChip();
                 $activechips->user_id = $user->id;
+                $activechips->status = true;
                 $activechips->chip = 'wildcard';
                 $activechips->start = Carbon::now();
                 $activechips->end = Carbon::now();
@@ -415,7 +419,7 @@ class UserController extends Controller
             if ($request->has('dob') && $request->filled('dob') && !is_null($request->dob)) {
                 $user->dob = $request->dob;
             }
-            
+
             $user->save();
             return response()->json([
                 'status' => true,
