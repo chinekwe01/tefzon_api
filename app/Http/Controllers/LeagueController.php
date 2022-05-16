@@ -115,7 +115,7 @@ class LeagueController extends Controller
     {
 
         $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        if (!is_null($free_hit)) {
+        if (is_null($free_hit)) {
             $defenders = $this->user->defenders();
             $midfielders = $this->user->midfielders();
             $goalkeepers = $this->user->goalkeepers();
@@ -277,8 +277,13 @@ class LeagueController extends Controller
             //Get squad
             $record = $this->getmysquadcount();
             $budget = $this->user->chip()->first()->budget;
+            //get player details
             $player  = $this->getplayerbyid($request->player_id);
             $checkforidenticalplayer = $this->user->squad()->where('player_id', $request->player_id)->first();
+
+            //get value by ratings
+            $rating = $player['stats']['data'][0]['rating'];
+            $value = $rating ? ceil((($rating / 10) * 20000000 / 10) / 100000) * 100000 : 4000000;
             if (!is_null($checkforidenticalplayer)) return response('already in squad', 422);
             if ($record['squad_count'] > 0) {
                 if ($record['totalvalue'] > $budget) {
@@ -307,7 +312,7 @@ class LeagueController extends Controller
                 'player_position' => $this->getPosition($player['position_id']),
                 'player_id' => $player['player_id'],
                 'position_id' => $player['position_id'],
-                'value' => 10000,
+                'value' => $value,
                 'team_id' => $player['team_id'],
                 'team' => $player['team']['data']['name'],
                 'image_path' => $player['image_path'],
@@ -326,11 +331,11 @@ class LeagueController extends Controller
         $player_id = $request->player_id;
         $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
         if (is_null($free_hit)) {
-            $startingCount =  $this->user->squad()->where('starting', 1)->count();
-            $player = GamerSquad::find($player_id);
+             $startingCount =  $this->user->squad()->where('starting', 1)->count();
+            $player = GamerSquad::where('player_id',$player_id)->first();
         } else {
             $startingCount =  $this->user->freesquad()->where('starting', 1)->count();
-            $player = FreeHitSquad::find($player_id);
+            $player = FreeHitSquad::where('player_id', $player_id)->first();
         }
 
 
@@ -365,7 +370,7 @@ class LeagueController extends Controller
     {
         $squads = $request->squads;
         $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        foreach($squads as $squad){
+        foreach ($squads as $squad) {
             if (is_null($free_hit)) {
                 $currentPlayer = GamerSquad::find($squad['current_player_id']);
                 $replacementPlayer = GamerSquad::find($squad['replacement_player_id']);
@@ -406,7 +411,6 @@ class LeagueController extends Controller
 
             $replacementPlayer->save();
             $currentPlayer->save();
-
         }
 
 
@@ -432,6 +436,8 @@ class LeagueController extends Controller
         $record = $this->getmysquadcount();
         $currentPlayer = GamerSquad::where('player_id', $request->current_player_id)->first();
         $player  = $this->getplayerbyid($request->replacement_player_id);
+        $rating = $player['stats']['data'][0]['rating'];
+        $value = $rating ? ceil((($rating / 10) * 20000000 / 10) / 100000) * 100000 : 4000000;
         if ($currentPlayer->position_id != $player['position_id']) return response('Unacceptable', 405);
         $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
         if ($checkforsameteam['status'] == 'max') {
@@ -443,17 +449,33 @@ class LeagueController extends Controller
         $currentPlayer->player_position  =  $this->getPosition($player['position_id']);
         $currentPlayer->player_id = $player['player_id'];
         $currentPlayer->position_id = $player['position_id'];
-        $currentPlayer->value = 100000;
+        $currentPlayer->value = $value;
         $currentPlayer->team_id = $player['team_id'];
         $currentPlayer->team = $player['team']['data']['name'];
         $currentPlayer->image_path = $player['image_path'];
         $currentPlayer->save();
         return response(['status' => true, 'message' => 'squad updated'], 200);
     }
-    public function removeplayer(gamerSquad $gamerSquad)
+    public function removeplayer(GamerSquad $gamerSquad)
     {
         $gamerSquad->delete();
         return  response('ok');
+    }
+
+    public function resetTeam()
+    {
+        $squads = GamerSquad::where('user_id', $this->user->id)->get();
+        if (count($squads)) {
+            foreach ($squads as $squad) {
+                $squad->delete();
+                $squad->save();
+            }
+        }
+
+        return  response([
+            'status' => true,
+            'message' => 'reset success'
+        ]);
     }
 
 
@@ -506,12 +528,12 @@ class LeagueController extends Controller
         return  response('ok');
     }
 
-    public function getleagueteams($season_id)
+    public function getleagueteams()
     {
 
         try {
             $response = Http::get(
-                $this->url . '/teams/season/' . $season_id,
+                $this->url . '/teams/season/' . $this->current_season_id,
                 ['api_token' => $this->apikey]
             );
             return $response['data'];
@@ -606,7 +628,7 @@ class LeagueController extends Controller
                 [
                     'api_token' => $this->apikey,
                     'include' => 'team,stats',
-                    'seasons' => $this->previous_season_id
+                    'seasons' => $this->current_season_id
                 ]
             );
             return $response['data'];
@@ -880,7 +902,8 @@ class LeagueController extends Controller
                         'display_name' => $b['player']['data']['display_name'],
                         'nationality' => $b['player']['data']['nationality'],
                         'height' => $b['player']['data']['height'],
-                        'weight' => $b['player']['data']['weight']
+                        'weight' => $b['player']['data']['weight'],
+                        'value' => $b['rating'] ? round(($b['rating'] / 10) * 20000000) : 4000000
                     ];
                 }
             });

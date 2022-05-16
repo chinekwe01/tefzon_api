@@ -32,7 +32,8 @@ class User extends Authenticatable
         'gender',
         'address',
         'dob',
-        'country'
+        'country',
+        'favourite_teams'
     ];
 
     /**
@@ -57,6 +58,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'favourite_teams' => 'array',
     ];
 
 

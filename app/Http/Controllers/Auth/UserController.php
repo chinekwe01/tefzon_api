@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use App\Jobs\VerifyEmailJob;
 use Illuminate\Http\Request;
 use App\Models\AccountDetail;
+use App\Models\FavouriteTeam;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use App\Notifications\NewReferral;
@@ -59,6 +60,7 @@ class UserController extends Controller
                 $info = $request->all();
                 $info['password'] = Hash::make($request->password);
                 $info['referral_link'] = $request->username;
+            
                 $user = User::create($info);
                 $credentials = [
                     'email' => $request->email,
@@ -71,7 +73,7 @@ class UserController extends Controller
                 }
 
                 if ($request->referral_link && $request->has('referral_link')  && $request->filled('referral_link')) {
-                    $user->referral()->create(['referral_link'=> strtolower($request->referral_link)]);
+                    $user->referral()->create(['referral_link' => strtolower($request->referral_link)]);
                 }
 
                 $data = [
@@ -84,13 +86,13 @@ class UserController extends Controller
                 dispatch(new \App\Jobs\WelcomeGamerJob($data));
                 $code = Str::random(40);
 
-               // send email verification email
+                // send email verification email
                 DB::table('password_resets')->insert(
                     ['email' => $request->email, 'token' => $code, 'created_at' => Carbon::now()]
                 );
                 $detail = [
                     'email' => $user->email,
-                    'url'=> 'https://tefzon.com/verify-email?token='. $code.'&new_user='.$user->username
+                    'url' => 'https://tefzon.com/verify-email?token=' . $code . '&new_user=' . $user->username
                 ];
                 dispatch(new \App\Jobs\VerifyEmailJob($detail));
 
@@ -114,13 +116,20 @@ class UserController extends Controller
                 $account->user_id = $user->id;
                 $account->save();
 
-                if($request->has('referral') && $request->filled('referral') && !is_null($request->referral)){
+                if ($request->has('referral') && $request->filled('referral') && !is_null($request->referral)) {
                     $referral = new Referral();
-                    $referringUser= User::where('referral', $request->referral)->first();
+                    $referringUser = User::where('referral', $request->referral)->first();
                     $referral->user_id = $referringUser->id;
                     $referral->invited_user_id = $user->id;
                     $referral->save();
                     $referringUser->notify(new NewReferral($user));
+                }
+
+                if ($request->has('favourite_team') && $request->filled('favourite_team') && !is_null($request->favourite_team)) {
+                    $team = new FavouriteTeam();
+                    $team->user_id = $user->id;
+                    $team->team_id = $request->favourite_team;
+                    $team->save();
                 }
 
 
@@ -419,6 +428,9 @@ class UserController extends Controller
             if ($request->has('dob') && $request->filled('dob') && !is_null($request->dob)) {
                 $user->dob = $request->dob;
             }
+            if ($request->has('favourite_team') && $request->filled('favourite_team') && !is_null($request->favourite_team)) {
+                $user->dob = $request->favourite_team;
+            }
 
             $user->save();
             return response()->json([
@@ -435,7 +447,8 @@ class UserController extends Controller
         }
     }
 
-    public function verifyemail(Request $request){
+    public function verifyemail(Request $request)
+    {
         $validator = Validator::make($request->all(), [
 
             'token' => 'required',
@@ -469,7 +482,6 @@ class UserController extends Controller
             "message" => 'verified'
 
         ], 200);
-
     }
     public function destroy(User $user)
     {
@@ -502,6 +514,5 @@ class UserController extends Controller
 
             ], 500);
         }
-
     }
 }

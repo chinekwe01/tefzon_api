@@ -27,4 +27,8 @@ class TeamSelectionController extends Controller
             'status' => true,
         ]);
     }
+
+    public function getFavouriteTeams(){
+      return  $user = auth('sanctum')->user()->favourite_teams;
+    }
 }

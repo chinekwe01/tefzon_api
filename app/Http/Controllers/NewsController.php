@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
 class NewsController extends Controller
@@ -30,9 +31,10 @@ class NewsController extends Controller
     }
 
 
-    public function getnews(){
+    public function getnews()
+    {
         try {
-        return    $response = Http::get(
+            return    $response = Http::get(
                 $this->url . '/news/fixtures',
                 ['api_token' => $this->apikey]
             );
@@ -61,7 +63,7 @@ class NewsController extends Controller
     {
         try {
             return    $response = Http::get(
-                $this->url . '/news/seasons/'.$season_id,
+                $this->url . '/news/seasons/' . $season_id,
                 ['api_token' => $this->apikey]
             );
             // return collect($response->collect()['data']);
@@ -92,6 +94,96 @@ class NewsController extends Controller
             );
             // return collect($response->collect()['data']);
             return $response['data'];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function getfixturesthisweekk()
+    {
+        $startWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $endWeek = Carbon::now()->endOfWeek()->format('Y-m-d');;
+
+        try {
+            $response = Http::get(
+                $this->url . '/fixtures/between/' . $startWeek . '/' . $endWeek,
+                [
+                    'api_token' => $this->apikey,
+                    'include' => 'localTeam, visitorTeam'
+                ]
+            );
+            return collect($response->collect()['data'])->map(function ($a) {
+                return  [
+                    'round_id' => $a['round_id'],
+                    'weather_report' => $a['weather_report'],
+                    'scores' => $a['scores'],
+                    'time' => $a['time'],
+                    'standings' => $a['standings'],
+                    'colors' => $a['colors'],
+                    'localTeam' => $a['localTeam'],
+                    'visitorTeam' => $a['visitorTeam']
+                ];
+            });
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+    public function getfixturesbydate(Request $request)
+    {
+        $startWeek = Carbon::parse($request->start)->format('Y-m-d');
+        $endWeek = Carbon::parse($request->sendtart)->format('Y-m-d');;
+
+        try {
+            $response = Http::get(
+                $this->url . '/fixtures/between/' . $startWeek . '/' . $endWeek,
+                [
+                    'api_token' => $this->apikey,
+                    'include' => 'localTeam, visitorTeam'
+                ]
+            );
+            return collect($response->collect()['data'])->map(function ($a) {
+                return  [
+                    'round_id' => $a['round_id'],
+                    'weather_report' => $a['weather_report'],
+                    'scores' => $a['scores'],
+                    'time' => $a['time'],
+                    'standings' => $a['standings'],
+                    'colors' => $a['colors'],
+                    'localTeam' => $a['localTeam'],
+                    'visitorTeam' => $a['visitorTeam']
+                ];
+            });
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function handlenextmatch()
+    {
+        $startWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $endWeek = Carbon::now()->endOfWeek()->format('Y-m-d');;
+
+        try {
+            $response = Http::get(
+                $this->url . '/fixtures/between/' . $startWeek . '/' . $endWeek,
+                [
+                    'api_token' => $this->apikey,
+                    'include' => 'localTeam, visitorTeam,lineup,bench',
+                    'leagues' => '501'
+                ]
+            );
+            $fixtures = collect($response->collect()['data'])->map(function ($a) {
+                return  [
+                    'round_id' => $a['round_id'],
+                    'localTeam' => $a['localTeam'],
+                    'visitorTeam' => $a['visitorTeam'],
+
+                ];
+            });
+            foreach ($fixtures as $fixture) {
+                   $localTeam = $fixture['localTeam']['data'];
+                $visitorTeam = $fixture['visitorTeam']['data'];
+            }
         } catch (\Throwable $th) {
             throw $th;
         }

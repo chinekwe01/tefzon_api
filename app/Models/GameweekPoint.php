@@ -19,7 +19,8 @@ class GameweekPoint extends Model
         'gameweek',
         'user_id',
         'is_starting',
-        'image_path'
+        'image_path',
+        'next_fixture'
 
 
     ];

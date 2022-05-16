@@ -23,7 +23,8 @@ class GamerSquad extends Model
         'team_id',
         'team',
         'image_path',
-        'starting'
+        'starting',
+        'next_fixture'
     ];
 
     public function user()

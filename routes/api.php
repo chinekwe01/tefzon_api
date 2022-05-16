@@ -11,6 +11,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\BannedGamerController;
+use App\Http\Controllers\TeamSelectionController;
 use App\Http\Controllers\LeagueOverviewController;
 use App\Http\Controllers\LinkedSocialAccountController;
 
@@ -67,7 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-        Route::get('get/league/teams/{season_id}', [LeagueController::class, 'getleagueteams']);
+        Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
         Route::get('get/leagues', [LeagueController::class, 'getleagues']);
         Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
         Route::get('search/team', [LeagueController::class, 'searchteambyname']);
@@ -78,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         Route::post('add/player', [LeagueController::class, 'addplayer']);
+        Route::get('reset/team', [LeagueController::class, 'resetTeam']);
         Route::get('get/my/squad', [LeagueController::class, 'getmysquad']);
         Route::get('get/my/forwards', [LeagueController::class, 'getforwards']);
         Route::get('get/my/midfielders', [LeagueController::class, 'getmidfielders']);
@@ -91,6 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('select/vice-captain/{gamerSquad}', [LeagueController::class, 'selectvicecaptain']);
 
         //Select favourite team
+        Route::get('get/favourite-teams', [TeamSelectionController::class, 'getFavouriteTeams']);
         Route::post('select/favourite-team', [TeamSelectionController::class, 'selectFavouriteTeam']);
         Route::put('update/favourite-team/{favouriteTeam}', [TeamSelectionController::class, 'selectFavouriteTeam']);
 
@@ -169,6 +172,11 @@ Route::get('cancel-league/{league}', [LeagueController::class, 'cancelleague']);
 Route::get('get-news', [NewsController::class, 'getnews']);
 Route::get('get-upcoming-news', [NewsController::class, 'getupcomingnews']);
 Route::get('get-season-news/{season_id}', [NewsController::class, 'getnewsbyseason']);
+
+Route::get('get-fixtures', [NewsController::class, 'getfixturesthisweekk']);
+Route::post('get-fixtures-by-date', [NewsController::class, 'getfixturesbydate']);
+
+Route::get('next-fixture', [NewsController::class, 'handlenextmatch']);
 
 
 Route::get('get-scores', [NewsController::class, 'getalllivescores']);
