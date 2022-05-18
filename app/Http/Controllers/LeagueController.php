@@ -530,9 +530,9 @@ class LeagueController extends Controller
 
     public function getleagueteams()
     {
-
+return [];
         try {
-         return   $response = Http::get(
+            $response = Http::get(
                 $this->url . '/teams/season/' . $this->current_season_id,
                 ['api_token' => $this->apikey]
             );
