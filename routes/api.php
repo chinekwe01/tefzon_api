@@ -60,20 +60,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('league/users/{league}', [LeagueController::class, 'getleagueusers']);
     // Gamer api
 
+    //Guest api
+    Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
+    Route::get('get/leagues', [LeagueController::class, 'getleagues']);
+    Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
+    Route::get('search/team', [LeagueController::class, 'searchteambyname']);
+    Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);
+    Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
+
+
     Route::middleware('ability:role-gamer')->group(function () {
 
         Route::get('user/leagues', [LeagueController::class, 'getuserleagues']);
         Route::get('join/public/league/{league}', [LeagueController::class, 'joinleague']);
         Route::post('join/private/league', [LeagueController::class, 'joinprivateleague']);
-
-
-
-        Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
-        Route::get('get/leagues', [LeagueController::class, 'getleagues']);
-        Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
-        Route::get('search/team', [LeagueController::class, 'searchteambyname']);
-        Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);
-        Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
         Route::get('get/player/{id}', [LeagueController::class, 'getplayerbyid']);
         Route::get('search/player', [LeagueController::class, 'searchplayerbyname']);
 
