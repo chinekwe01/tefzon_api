@@ -54,7 +54,6 @@ Route::get('/auth/{provider}/callback', [LinkedSocialAccountController::class, '
     Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);
     Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
 
-    
 Route::middleware('auth:sanctum')->group(function () {
     //User routes
     Route::get('gamers', [UserController::class, 'index']);
@@ -63,14 +62,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('gamers/{user}', [UserController::class, 'destroy']);
 
     // League route
-    Route::apiResource('leagues', LeagueController::class);
+
     Route::get('get-league-table/{league}', [PointController::class, 'getleaguetable']);
     Route::get('league/users/{league}', [LeagueController::class, 'getleagueusers']);
     // Gamer api
-
+    
+    Route::get('private-leagues', [LeagueController::class, 'getprivateleague']);
+    Route::get('public-leagues', [LeagueController::class, 'getpublicleague']);
+    Route::apiResource('leagues', LeagueController::class);
 
 
     Route::middleware('ability:role-gamer')->group(function () {
+
 
         Route::get('user/leagues', [LeagueController::class, 'getuserleagues']);
         Route::get('join/public/league/{league}', [LeagueController::class, 'joinleague']);

@@ -498,7 +498,7 @@ class LeagueController extends Controller
                     'current_stage_id' => $key['current_stage_id'],
                 ];
             });
-             return $response->status() === 200 ? $response['data'] : $response['error'];
+            return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -566,7 +566,7 @@ class LeagueController extends Controller
                 ['api_token' => $this->apikey]
 
             );
-             return $response->status() === 200 ? $response['data'] : $response['error'];
+            return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -580,7 +580,7 @@ class LeagueController extends Controller
                 ['api_token' => $this->apikey]
 
             );
-             return $response->status() === 200 ? $response['data'] : $response['error'];
+            return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -631,7 +631,7 @@ class LeagueController extends Controller
                     'seasons' => $this->current_season_id
                 ]
             );
-             return $response->status() === 200 ? $response['data'] : $response['error'];
+            return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -639,6 +639,14 @@ class LeagueController extends Controller
     public function index()
     {
         return  League::all();
+    }
+    public function getpublicleague()
+    {
+        return  League::where('type', 'public')->where('status', '!=', 'ended')->get();
+    }
+    public function getprivateleague()
+    {
+        return  League::where('type', 'private')->where('status', '!=', 'ended')->get();
     }
     public function show(League $league)
     {
