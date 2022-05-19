@@ -498,7 +498,7 @@ class LeagueController extends Controller
                     'current_stage_id' => $key['current_stage_id'],
                 ];
             });
-            return $response['data'];
+             return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -536,7 +536,7 @@ class LeagueController extends Controller
                 $this->url . '/teams/season/' . $this->current_season_id,
                 ['api_token' => $this->apikey]
             );
-            return $response['data'];
+            return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -551,7 +551,7 @@ class LeagueController extends Controller
                 ['api_token' => $this->apikey]
 
             );
-            return $response['data'];
+            return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -566,7 +566,7 @@ class LeagueController extends Controller
                 ['api_token' => $this->apikey]
 
             );
-            return $response['data'];
+             return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -580,7 +580,7 @@ class LeagueController extends Controller
                 ['api_token' => $this->apikey]
 
             );
-            return $response['data'];
+             return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -631,7 +631,7 @@ class LeagueController extends Controller
                     'seasons' => $this->current_season_id
                 ]
             );
-            return $response['data'];
+             return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
             throw $th;
         }
