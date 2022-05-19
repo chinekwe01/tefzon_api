@@ -532,7 +532,7 @@ class LeagueController extends Controller
     {
 
         try {
-          return  $response = Http::get(
+            $response = Http::get(
                 $this->url . '/teams/season/' . $this->current_season_id,
                 ['api_token' => $this->apikey]
             );
