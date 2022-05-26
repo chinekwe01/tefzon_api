@@ -889,8 +889,15 @@ class LeagueController extends Controller
                 ]
             );
 
-            $squads = collect($response['data'])->map(function ($a) {
-                return   $a['squad']['data'];
+            return  $squads = collect($response['data'])->map(function ($a) {
+
+                $data =   [
+
+                    'data' => $a['squad']['data']
+                ];
+                $data['team_name'] = $a['name'];
+                $data['short_team_name'] = $a['short_code'];
+                return $data;
             });
             $arraypla = [];
 
@@ -916,10 +923,11 @@ class LeagueController extends Controller
                 }
             });
 
-            return $playerlist->filter(function ($c) use ($position_id) {
+            return $result = $playerlist->filter(function ($c) use ($position_id) {
 
                 return $c && intval($c['position_id']) === intval($position_id);
             })->values()->all();
+            return collect($result)->paginate(10);
         } catch (\Throwable $th) {
             throw $th;
         }
