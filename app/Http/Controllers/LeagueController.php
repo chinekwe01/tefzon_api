@@ -889,22 +889,17 @@ class LeagueController extends Controller
                 ]
             );
 
-            return  $squads = collect($response['data'])->map(function ($a) {
+              $squads = collect($response['data'])->map(function ($a) {
 
-                $data =   [
-
-                    'data' => $a['squad']['data']
-                ];
-                $data['team_name'] = $a['name'];
-                $data['short_team_name'] = $a['short_code'];
-                return $data;
+                $data =   $a['squad']['data'];
+                $data[0]['player']['data']['team_name'] = $a['name'];
+                $data[0]['player']['data']['short_team_name'] = $a['short_code'];
+                return $data[0];
             });
             $arraypla = [];
 
-            //Flatten array of players
-            $mergedlist = array_merge(...$squads);
 
-            $playerlist = collect($mergedlist)->map(function ($b) {
+            $playerlist = collect($squads)->map(function ($b) {
                 if (array_key_exists('player', $b)) {
                     return    [
                         'player_id' => $b['player_id'],
@@ -914,6 +909,8 @@ class LeagueController extends Controller
                         'position' =>  $this->getPosition($b['position_id']),
                         'image_path' => $b['player']['data']['image_path'],
                         'team_id' => $b['player']['data']['team_id'],
+                        'team_name' => $b['player']['data']['team_name'],
+                        'short_team_name' => $b['player']['data']['short_team_name'],
                         'display_name' => $b['player']['data']['display_name'],
                         'nationality' => $b['player']['data']['nationality'],
                         'height' => $b['player']['data']['height'],
