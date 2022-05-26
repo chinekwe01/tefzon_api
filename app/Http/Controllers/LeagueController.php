@@ -282,26 +282,26 @@ class LeagueController extends Controller
             $checkforidenticalplayer = $this->user->squad()->where('player_id', $request->player_id)->first();
 
             //get value by ratings
-            $rating = $player['stats']['data'][0]['rating'];
+            $rating = count($player['stats']['data']) ? $player['stats']['data'][0]['rating'] : 5;
             $value = $rating ? ceil((($rating / 10) * 20000000 / 10) / 100000) * 100000 : 4000000;
-            if (!is_null($checkforidenticalplayer)) return response('already in squad', 422);
+            if (!is_null($checkforidenticalplayer)) return response(['status' => false, 'message' => 'already in squad'], 422);
             if ($record['squad_count'] > 0) {
                 if ($record['totalvalue'] > $budget) {
-                    return response('exceeded transfer budget', 422);
+                    return response(['status' => false, 'message' => 'exceeded transfer budget'], 422);
                 }
 
                 if ($record['squad_count'] === $this->max_players) {
-                    return response('Squad full', 422);
+                    return response(['status' => false, 'message' => 'Squad full'], 422);
                 }
 
 
                 $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
                 if ($checkforsameteam['status'] == 'max') {
-                    return response('can not have more than 4 players from same team', 422);
+                    return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
                 }
 
                 if ($this->checkposition($record['squad'], $player['position_id'])['status'] == 'max') {
-                    return response('max position selection reached', 422);
+                    return response(['status' => false, 'message' => 'max position selection reached'], 422);
                 }
             }
 
@@ -339,7 +339,7 @@ class LeagueController extends Controller
         }
 
 
-        if ($startingCount == 11) return response('squad set, replace active player', 422);
+        if ($startingCount == 11) return response(['status' => false, 'message' => 'squad set, replace active player'], 422);
 
         if ($player->position_id == 1 &&  $this->checkstartingsquad($player) == 1) {
             return 'max selection';
@@ -355,7 +355,7 @@ class LeagueController extends Controller
         }
         $player->starting = true;
         $player->save();
-        return response('squad updated', 200);
+        return response(['status' => true, 'message' => 'squad updated'], 200);
     }
 
 
@@ -441,7 +441,7 @@ class LeagueController extends Controller
         if ($currentPlayer->position_id != $player['position_id']) return response('Unacceptable', 405);
         $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
         if ($checkforsameteam['status'] == 'max') {
-            return response('can not have more than 4 players from same team', 422);
+            return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
         }
 
 
@@ -507,7 +507,7 @@ class LeagueController extends Controller
     {
 
         if ($gamerSquad->position_id == 1 && $request->squad_no != 1) {
-            return response('cannot be in position', 422);
+            return response(['status' => false, 'message' => 'cannot be in position'], 422);
         }
         $prevsquad = gamerSquad::where('position_id', $request->squad_no)->get();
 
@@ -748,8 +748,8 @@ class LeagueController extends Controller
         return DB::transaction(function () use ($league) {
             $user = auth()->user();
             $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
-            if ($league->status == 'active') return response('already started');
-            if (!is_null($isInLeague)) return response('already member');
+            if ($league->status == 'active') return response(['status' => false, 'message' => 'already started'], 422);
+            if (!is_null($isInLeague)) return response(['status' => false, 'message' => 'already a member'], 422);
 
             if ($league->entry_type == 'paid') {
                 $account = $this->user->accountdetails()->first();
@@ -798,8 +798,8 @@ class LeagueController extends Controller
             if ($league->type == 'private') {
 
                 if ($league->code !== $request->code) return response('invalid code');
-                if ($league->status == 'active') return response('already started');
-                if (!is_null($isInLeague)) return response('already member');
+                if ($league->status == 'active') return response(['status' => false, 'message' => 'already started'], 422);
+                if (!is_null($isInLeague)) return response(['status' => false, 'message' => 'already a member'], 422);
                 if ($league->entry_type == 'paid') {
                     $account = $this->user->accountdetails()->first();
                     if ($account->balance < $league->entry_fee) {
@@ -919,7 +919,7 @@ class LeagueController extends Controller
                         'team_name' => array_key_exists('team_name', $b['player']['data']) ? $b['player']['data']['team_name'] : '',
                         'short_team_name' => array_key_exists('short_team_name', $b['player']['data']) ? $b['player']['data']['short_team_name'] : '',
                         'display_name' => array_key_exists('display_name', $b['player']['data']) ? $b['player']['data']['display_name'] : '',
-                        'nationality' =>array_key_exists('nationality', $b['player']['data']) ? $b['player']['data']['nationality'] : '',
+                        'nationality' => array_key_exists('nationality', $b['player']['data']) ? $b['player']['data']['nationality'] : '',
                         'height' => array_key_exists('height', $b['player']['data']) ? $b['player']['data']['height'] : '',
                         'weight' => array_key_exists('weight', $b['player']['data']) ? $b['player']['data']['weight'] : '',
                         'value' => $b['rating'] ? round(($b['rating'] / 10) * 20000000) : 4000000
@@ -1010,7 +1010,7 @@ class LeagueController extends Controller
         }
         $chip->save();
 
-        return response('ok');
+        return response(['message' => 'ok']);
     }
 
     public function cancelleague(League $league)
