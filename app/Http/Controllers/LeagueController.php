@@ -465,8 +465,10 @@ class LeagueController extends Controller
     public function resetTeam()
     {
         $squads = GamerSquad::where('user_id', $this->user->id)->get();
+
         if (count($squads)) {
             foreach ($squads as $squad) {
+              
                 $squad->delete();
                 $squad->save();
             }

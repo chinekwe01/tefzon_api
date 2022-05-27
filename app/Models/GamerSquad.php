@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class GamerSquad extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $fillable = [
         'squad_no',
         'player_name',
@@ -24,7 +25,8 @@ class GamerSquad extends Model
         'team',
         'image_path',
         'starting',
-        'next_fixture'
+        'next_fixture',
+        'deleted_by'
     ];
 
     public function user()
