@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
     {
          $schedule->command('league:status')->everyFiveMinutes();
          $schedule->command('check:fixtures')->everyFiveMinutes();
+         $schedule->command('set:fixtures')->daily();
     }
 
     /**

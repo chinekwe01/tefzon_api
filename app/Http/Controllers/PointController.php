@@ -295,7 +295,7 @@ class PointController extends Controller
 
         $squads = GamerSquad::get();
         $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        if(!is_null($free_hit)){
+        if (!is_null($free_hit)) {
             foreach ($squads as $squad) {
                 $gameweek = new GameweekPoint();
                 $gameweek->gameweek = $week;
@@ -314,22 +314,20 @@ class PointController extends Controller
                 $gameweek->is_starting =  $free_hit['starting'];
                 $gameweek->save();
             }
-
-        }else{
+        } else {
             foreach ($squads as $squad) {
                 $gameweek = new GameweekPoint();
                 $gameweek->gameweek = $week;
                 $gameweek->player_name =  $squad['player_name'];
                 $gameweek->point = 0;
                 $gameweek->player_position = $squad['player_position'];
-                $gameweek->position = $squad['player_position'];
                 $gameweek->position_id = $squad['position_id'];
                 $gameweek->player_id =  $squad['player_id'];
                 $gameweek->is_captain =  $squad['is_captain'];
                 $gameweek->player_name =  $squad['player_name'];
                 $gameweek->is_vice_captain =  $squad['is_vice_captain'];
                 $gameweek->user_id = $squad['user_id'];
-                $gameweek->gamer_squad_id = $squad['id'];
+                // $gameweek->gamer_squad_id = $squad['id'];
                 $gameweek->image_path = $squad['image_path'];
                 $gameweek->is_starting =  $squad['starting'];
                 $gameweek->save();
@@ -344,8 +342,8 @@ class PointController extends Controller
     }
     public function checkfixtures()
     {
-        $date =Carbon::now()->format('Y-m-d');
-           $response = Http::get(
+        $date = Carbon::now()->format('Y-m-d');
+        $response = Http::get(
             $this->url . '/fixtures/date/' . $date,
             [
                 'api_token' => $this->apikey,
@@ -356,7 +354,7 @@ class PointController extends Controller
         );
 
 
-          $sortedresults = collect($response->collect()['data'])->map(function ($key) {
+        $sortedresults = collect($response->collect()['data'])->map(function ($key) {
 
             return   [
                 'round_id' => $key['round_id'],
@@ -365,6 +363,7 @@ class PointController extends Controller
 
             ];
         });
+
         if (!count($sortedresults)) return response('No data', 200);
         $gameweek = $sortedresults[0]['round_id'];
 
@@ -378,7 +377,7 @@ class PointController extends Controller
             $fifteen = Carbon::now()->addMinutes(15);
             $startTime = Carbon::parse($sortedresults[0]['time']);
             $minutesDiff = $now->diffInMinutes($startTime);
-            if ($minutesDiff <= 15) {
+            if ($minutesDiff >= 15) {
                 return  $this->lockteam($gameweek);
             } else {
                 return response('Time available', 200);
@@ -387,7 +386,7 @@ class PointController extends Controller
 
             $this->handlepoints($date, $response);
             $this->addpointstoleague();
-            return response(['status' => true,'message' => 'ok'], 200);
+            return response(['status' => true, 'message' => 'ok'], 200);
         }
     }
 
@@ -417,7 +416,7 @@ class PointController extends Controller
             foreach ($leagues as $league) {
                 $checkleague =  $league->leaguetable()->where('user_id', $user->id)->first();
                 if (!is_null($checkleague)) {
-                    $userhistorypoints = $user->histories()->whereBetween('created_at',[Carbon::parse($league->start), Carbon::parse($league->end)])->get()->sum('points');
+                    $userhistorypoints = $user->histories()->whereBetween('created_at', [Carbon::parse($league->start), Carbon::parse($league->end)])->get()->sum('points');
                     $checkleague->gameweek = $gameweek;
                     $checkleague->points = $userhistorypoints;
                     $checkleague->save();
@@ -576,6 +575,22 @@ class PointController extends Controller
         return [
             'status' => true,
             'message' => 'ok'
+        ];
+    }
+
+    public function getstat($week)
+    {
+        $points = History::where('gameweek', $week)->get()->map(function ($a) {
+            return $a['points'];
+        });
+        $max = collect($points)->max();
+        $min = collect($points)->min();
+        $avg = collect($points)->avg();
+
+        return [
+            'highestPoint' => collect($points)->max(),
+            'lowestPoint' => collect($points)->min(),
+            'averagePoint' => intval(collect($points)->avg())
         ];
     }
 }

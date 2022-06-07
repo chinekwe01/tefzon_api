@@ -14,7 +14,8 @@ class AccountDetail extends Model
           'wins',
           'loss',
           'draw',
-          'cancelled'
+          'cancelled',
+        'account_name', 'bank_name', 'account_no'
     ];
 
     public function user(){

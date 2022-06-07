@@ -46,13 +46,13 @@ Route::middleware('auth:sanctum', 'ability:role-admin')->get('/user', function (
 Route::get('/auth/login/{provider}', [LinkedSocialAccountController::class, 'handleRedirect']);
 Route::get('/auth/{provider}/callback', [LinkedSocialAccountController::class, 'handleCallback']);
 
-  //Guest api
-    Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
-    Route::get('get/leagues', [LeagueController::class, 'getleagues']);
-    Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
-    Route::get('search/team', [LeagueController::class, 'searchteambyname']);
-    Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);
-    Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
+//Guest api
+Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
+Route::get('get/leagues', [LeagueController::class, 'getleagues']);
+Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
+Route::get('search/team', [LeagueController::class, 'searchteambyname']);
+Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);
+Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
 
 Route::middleware('auth:sanctum')->group(function () {
     //User routes
@@ -66,7 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('get-league-table/{league}', [PointController::class, 'getleaguetable']);
     Route::get('league/users/{league}', [LeagueController::class, 'getleagueusers']);
     // Gamer api
-    
+
     Route::get('private-leagues', [LeagueController::class, 'getprivateleague']);
     Route::get('public-leagues', [LeagueController::class, 'getpublicleague']);
     Route::apiResource('leagues', LeagueController::class);
@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
         //Withdraw requests api
+        Route::post('update/account', [AccountController::class, 'updateaccountdetails']);
         Route::get('pending-withdraw-requests', [AccountController::class, 'pendingwithdraw']);
         Route::get('approved-withdraw-requests', [AccountController::class, 'approvedwithdraw']);
         Route::get('failed-withdraw-requests', [AccountController::class, 'failedwithdraw']);
@@ -138,7 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Admin api
     Route::middleware('ability:role-admin')->group(function () {
 
-   //Cancel league
+        //Cancel league
         // Route::get('cancel-league/{league}', [LeagueController::class, 'cancelleague']);
 
         //Withdraw requests api
@@ -166,7 +167,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('handle-overview/{id}', [LeagueOverviewController::class, 'handleLeagueEnding']);
         Route::get('handle-overview-status/{id}', [LeagueOverviewController::class, 'handleoverviewstatus']);
 
-        Route::get('check-fixtures', [PointController::class, 'checkfixtures']);
+
         Route::get('add-points-to-league', [PointController::class, 'addpointstoleague']);
     });
 });
@@ -186,3 +187,11 @@ Route::get('next-fixture', [NewsController::class, 'handlenextmatch']);
 Route::get('get-scores', [NewsController::class, 'getalllivescores']);
 
 Route::get('get-livescores', [NewsController::class, 'getlivscores']);
+
+Route::get('check-fixtures', [PointController::class, 'checkfixtures']);
+
+Route::get('use-autocomplete', [TeamSelectionController::class, 'autocomplete']);
+
+Route::get('set/next-fixture', [TeamSelectionController::class, 'setfixtures']);
+Route::get('set/injury', [TeamSelectionController::class, 'setinjury']);
+Route::get('get/stats/{week}', [PointController::class, 'getstat']);

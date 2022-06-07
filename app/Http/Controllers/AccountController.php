@@ -68,6 +68,22 @@ class AccountController extends Controller
         return $this->user->accountdetails()->first();
     }
 
+    public function updateaccountdetails(Request $request)
+    {
+        $account = $this->user->accountdetails()->first();
+        if ($request->has('bank_name') && $request->filled('bank_name') && !is_null($request->bank_name)) {
+            $account->bank_name = $request->bank_name;
+        }
+        if ($request->has('account_name') && $request->filled('account_name') && !is_null($request->account_name)) {
+            $account->account_name = $request->account_name;
+        }
+        if ($request->has('account_no') && $request->filled('account_no') && !is_null($request->account_no)) {
+            $account->account_no = $request->account_no;
+        }
+        $account->save();
+        return $account;
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -100,12 +116,11 @@ class AccountController extends Controller
 
         ]);
         return response([
-            'success'=> true,
+            'success' => true,
             'message' => 'request sent'
-        ],201);
-
+        ], 201);
     }
-    public function update(Request $request , WithdrawRequest $withdrawRequest)
+    public function update(Request $request, WithdrawRequest $withdrawRequest)
     {
         $validator = Validator::make(request()->all(), [
             'amount' => 'required|numeric',
@@ -140,6 +155,19 @@ class AccountController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+    public function verifypayment(Request $request)
+    {
+
+        $event =  $request->event;
+        $data = $request->data;
+        switch ($event) {
+            case 'charge.success':
+                break;
+            case 'charge.failed':
+                break;
+            default;
+        }
+    }
     public function destroy($id)
     {
         //

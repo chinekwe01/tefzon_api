@@ -16,21 +16,19 @@ return new class extends Migration
         Schema::create('gamer_squads', function (Blueprint $table) {
             $table->id();
             $table->integer('squad_no')->nullable();
-            $table->string('player_name');
-            $table->string('player_position');
-            $table->integer('player_id');
-            $table->integer('position_id');
-            $table->integer('value');
-            $table->integer('team_id');
-            $table->string('team');
+            $table->string('player_name')->nullable();
+            $table->string('player_position')->nullable();
+            $table->integer('player_id')->nullable();
+            $table->integer('position_id')->nullable();
+            $table->integer('value')->nullable();
+            $table->integer('team_id')->nullable();
+            $table->string('team')->nullable();
             $table->boolean('is_captain')->default(false);
             $table->boolean('is_vice_captain')->default(false);
             $table->boolean('is_absent')->default(false);
             $table->boolean('is_injured')->default(false);
-            $table->foreignId('user_id');
+            $table->foreignId('user_id')->nullable();
             $table->timestamps();
-            $table->softDeletes();
-            $table->bigInteger('deleted_by')->nullable();
         });
     }
 
