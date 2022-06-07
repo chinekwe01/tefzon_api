@@ -58,13 +58,12 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'favourite_teams' => 'array',
     ];
 
 
-    public function favourite_team()
+    public function favourite_teams()
     {
-        return $this->hasOne(FavouriteTeam::class);
+        return $this->hasMany(FavouriteTeam::class);
     }
 
     public function reports()

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GamerSquad;
 use Illuminate\Http\Request;
+use App\Models\FavouriteTeam;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
@@ -90,25 +91,40 @@ class TeamSelectionController extends Controller
         $team = new FavouriteTeam();
         $team->user_id = auth('sanctum')->user()->id;
         $team->team_id = $request->team_id;
+         $team->team_name = $request->team_name;
+        $team->image = $request->image;
         $team->save();
 
         return response([
             'status' => true,
+            'message' => 'added successfully'
         ]);
     }
 
     public function updateTeam(FavouriteTeam $favouriteTeam, Request $request)
     {
-        $favouriteTeam->team_id = $request->team_id;
+        if($request->has('team_id') && $request->filled('team_id')){
+            $favouriteTeam->team_id = $request->team_id;
+        }
+
+        if ($request->has('team_name') && $request->filled('team_name')) {
+            $favouriteTeam->team_name = $request->team_name;
+        }
+
+        if ($request->has('image') && $request->filled('image')) {
+            $favouriteTeam->image = $request->image;
+        }
+
         $favouriteTeam->save();
         return response([
             'status' => true,
+            'message' => 'updated successfully'
         ]);
     }
 
     public function getFavouriteTeams()
     {
-        return  $user = auth('sanctum')->user()->favourite_teams;
+        return  $user = auth('sanctum')->user()->favourite_teams()->get();
     }
 
     public function getgk($data)
