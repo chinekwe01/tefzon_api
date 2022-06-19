@@ -470,7 +470,7 @@ class LeagueController extends Controller
             foreach ($squads as $squad) {
 
                 $squad->delete();
-                $squad->save();
+            
             }
         }
 
@@ -899,7 +899,7 @@ class LeagueController extends Controller
                     $b['player']['data']['short_team_name'] = $a['short_code'];
                     return $b;
                 }, $a['squad']['data']);
-              
+
                 return $newdata;
             });
             $arraypla = [];
