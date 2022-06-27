@@ -15,9 +15,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-         $schedule->command('league:status')->everyFiveMinutes();
-         $schedule->command('check:fixtures')->everyFiveMinutes();
-         $schedule->command('set:fixtures')->daily();
+        $schedule->command('league:status')->everyFiveMinutes();
+        $schedule->command('check:fixtures')->everyFiveMinutes();
+        $schedule->command('set:fixtures')->daily();
+        $schedule->command('update:league')->daily();
     }
 
     /**
@@ -27,7 +28,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

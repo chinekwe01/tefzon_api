@@ -7,6 +7,7 @@ use App\Models\League;
 use App\Models\History;
 use App\Models\ActiveChip;
 use App\Models\GamerSquad;
+use App\Models\LiveLeague;
 use App\Models\LockStatus;
 use Illuminate\Http\Request;
 use App\Models\GameweekPoint;
@@ -33,10 +34,12 @@ class PointController extends Controller
 
     public function __construct()
     {
+        $epl = LiveLeague::where('league_id', 8)->first();
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
-        $this->current_week = 247462;
+        $this->current_season_id =  $epl->current_season_id;
+        $this->current_week =  $epl->current_round_id;
         $this->previous_week = 247461;
     }
 

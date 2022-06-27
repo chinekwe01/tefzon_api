@@ -7,6 +7,7 @@ use App\Models\Chip;
 use App\Models\League;
 use App\Models\ActiveChip;
 use App\Models\GamerSquad;
+use App\Models\LiveLeague;
 use App\Models\FreeHitSquad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -39,7 +40,7 @@ class LeagueController extends Controller
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
-        $this->current_season_id = 18369;
+        $this->current_season_id = LiveLeague::where('league_id', 8)->first()->current_season_id;
         $this->previous_season_id = 17141;
     }
 
@@ -470,7 +471,6 @@ class LeagueController extends Controller
             foreach ($squads as $squad) {
 
                 $squad->delete();
-            
             }
         }
 
@@ -480,27 +480,10 @@ class LeagueController extends Controller
         ]);
     }
 
-
     public function getleagues()
     {
         try {
-            $response = Http::get(
-                $this->url . '/leagues',
-                ['api_token' => $this->apikey]
-            );
-            return collect($response->collect()['data'])->map(function ($key) {
-
-                return   [
-                    'id' => $key['id'],
-                    'name' => $key['name'],
-                    'country_id' => $key['country_id'],
-                    'logo_path' => $key['logo_path'],
-                    'current_season_id' => $key['current_season_id'],
-                    'current_round_id' => $key['current_round_id'],
-                    'current_stage_id' => $key['current_stage_id'],
-                ];
-            });
-            return $response->status() === 200 ? $response['data'] : $response['error'];
+            return LiveLeague::all();
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -533,9 +516,10 @@ class LeagueController extends Controller
     public function getleagueteams()
     {
 
+
         try {
             $response = Http::get(
-                $this->url . '/teams/season/' . $this->current_season_id,
+                $this->url . '/teams/season/' .  $this->current_season_id,
                 ['api_token' => $this->apikey]
             );
             return $response->status() === 200 ? $response['data'] : $response['error'];
@@ -1037,5 +1021,47 @@ class LeagueController extends Controller
             'status' => true,
             'message' => 'league cancelled'
         ], 200);
+    }
+
+    public function storeLeague()
+    {
+        try {
+            $response = Http::get(
+                $this->url . '/leagues',
+                [
+                    'api_token' => $this->apikey,
+                    'include' => 'seasons, season'
+                ]
+            );
+            return collect($response->collect()['data'])->map(function ($key) {
+
+
+
+                $liveleague = LiveLeague::where('league_id', $key['id'])->first();
+
+                if (!is_null($liveleague)) {
+                    $liveleague->current_season_id = $key['current_season_id'];
+                    $liveleague->current_round_id = $key['current_round_id'];
+                    $liveleague->current_stage_id = $key['current_stage_id'];
+                    $liveleague->save();
+                    return  'updated';
+                } else {
+                    $liveleague = new LiveLeague();
+                    $liveleague->league_id = $key['id'];
+                    $liveleague->name = $key['name'];
+                    $liveleague->country_id = $key['country_id'];
+                    $liveleague->logo_path = $key['logo_path'];
+                    $liveleague->current_season_id = $key['current_season_id'];
+                    $liveleague->current_round_id = $key['current_round_id'];
+                    $liveleague->current_stage_id = $key['current_stage_id'];
+                    $liveleague->is_cup = $key['is_cup'];
+                    $liveleague->save();
+                    return  'ok';
+                }
+            });
+            return $response->status() === 200 ? $response['data'] : $response['error'];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

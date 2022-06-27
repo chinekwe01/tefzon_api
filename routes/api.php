@@ -48,7 +48,7 @@ Route::get('/auth/{provider}/callback', [LinkedSocialAccountController::class, '
 
 //Guest api
 Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
-Route::get('get/leagues', [LeagueController::class, 'getleagues']);
+Route::get('get/leagues', [LeagueController::class, 'storeLeague']);
 Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
 Route::get('search/team', [LeagueController::class, 'searchteambyname']);
 Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LiveLeague;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -23,10 +24,12 @@ class NewsController extends Controller
 
     public function __construct()
     {
+        $epl = LiveLeague::where('league_id', 8)->first();
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
-        $this->current_season_id = 18369;
+        $this->current_season_id =  $epl->current_season_id;
+        $this->current_week =  $epl->current_round_id;
         $this->previous_season_id = 17141;
     }
 
@@ -181,7 +184,7 @@ class NewsController extends Controller
                 ];
             });
             foreach ($fixtures as $fixture) {
-                   $localTeam = $fixture['localTeam']['data'];
+                $localTeam = $fixture['localTeam']['data'];
                 $visitorTeam = $fixture['visitorTeam']['data'];
             }
         } catch (\Throwable $th) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GamerSquad;
+use App\Models\LiveLeague;
 use Illuminate\Http\Request;
 use App\Models\FavouriteTeam;
 use Illuminate\Support\Carbon;
@@ -27,10 +28,12 @@ class TeamSelectionController extends Controller
 
     public function __construct()
     {
+        $epl = LiveLeague::where('league_id', 8)->first();
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
-        $this->current_season_id = 18369;
+        $this->current_season_id =  $epl->current_season_id;
+        $this->current_week =  $epl->current_round_id;
         $this->previous_season_id = 17141;
     }
 
