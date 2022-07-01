@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum', 'ability:role-admin')->get('/user', function (
 
 // Social login api
 Route::get('/auth/login/{provider}', [LinkedSocialAccountController::class, 'handleRedirect']);
-Route::get('/auth/{provider}/callback', [LinkedSocialAccountController::class, 'handleCallback']);
+Route::post('/auth/{provider}/callback', [LinkedSocialAccountController::class, 'handleCallback']);
 
 //Guest api
 Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
