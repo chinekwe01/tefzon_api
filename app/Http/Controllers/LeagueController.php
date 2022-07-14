@@ -822,6 +822,68 @@ class LeagueController extends Controller
             }
         });
     }
+    public function joinleaguebycode(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            $user = auth()->user();
+            $league = League::where('code', $request->code)->first();
+            $isInLeague = $user->leagues()->where('league_id', $league->id)->first();
+            if ($league->status == 'active') return response(['status' => false, 'message' => 'already started'], 422);
+            if (!is_null($isInLeague)) return response(['status' => false, 'message' => 'already a member'], 422);
+            if ($league->type == 'private') {
+
+
+
+                if ($league->entry_type == 'paid') {
+                    $account = $this->user->accountdetails()->first();
+                    if ($account->balance < $league->entry_fee) {
+                        return response([
+                            'status' => false,
+                            'message' => 'insufficient balance'
+                        ], 405);
+                    }
+                    $account->balance = $account->balance - $league->entry_fee;
+                    $account->save();
+
+                    $league->winning_amount = $league->winning_amount + $league->entry_fee;
+                    $league->save();
+                }
+
+                $league->users()->attach($user->id);
+                $league->leaguetable()->create([
+                    'user_id' => $user->id,
+                    'points' => 0,
+                    'gameweek' => 0,
+                    'rank' => 1
+                ]);
+                return response([
+                    'status' => true,
+                    'message' => 'success',
+
+                ]);
+            } else if ($league->type == 'public') {
+
+                $league->users()->attach($user->id);
+                $league->leaguetable()->create([
+                    'user_id' => $user->id,
+                    'points' => 0,
+                    'gameweek' => 0,
+                    'rank' => 1
+                ]);
+                return response([
+                    'status' => true,
+                    'message' => 'success',
+
+                ]);
+            } else {
+                return response([
+                    'status' => false,
+                    'message' => 'league code required',
+
+                ]);
+            }
+        });
+    }
     public function getleagueusers(League $league)
     {
 

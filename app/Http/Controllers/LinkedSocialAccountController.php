@@ -34,13 +34,15 @@ class LinkedSocialAccountController extends Controller
             return response()->json(['error' => 'Invalid credentials provided.'], 422);
         }
 
+        $name = explode(" ", $user->getName());
         $userCreated = User::firstOrCreate(
             [
                 'email' => $user->getEmail()
             ],
             [
                 'email_verified_at' => now(),
-                'name' => $user->getName(),
+                'first_name' => $name[0],
+                'last_name' => $name[1],
                 'username' => str_replace(' ','', $user->getName()),
                 'avatar' => $user->getAvatar()
 
