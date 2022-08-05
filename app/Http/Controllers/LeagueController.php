@@ -40,7 +40,8 @@ class LeagueController extends Controller
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
-        $this->current_season_id = LiveLeague::where('league_id', 8)->first()->current_season_id;
+        $liveleague = LiveLeague::where('league_id', 8)->first();
+        $this->current_season_id =  !is_null($liveleague)?$liveleague->current_season_id : null;
         $this->previous_season_id = 17141;
     }
 
