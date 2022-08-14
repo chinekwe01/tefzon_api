@@ -296,10 +296,10 @@ class LeagueController extends Controller
                 }
 
 
-                $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
-                if ($checkforsameteam['status'] == 'max') {
-                    return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
-                }
+                // $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
+                // if ($checkforsameteam['status'] == 'max') {
+                //     return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
+                // }
 
                 if ($this->checkposition($record['squad'], $player['position_id'])['status'] == 'max') {
                     return response(['status' => false, 'message' => 'max position selection reached'], 422);
