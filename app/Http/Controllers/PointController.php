@@ -346,12 +346,13 @@ class PointController extends Controller
     public function checkfixtures()
     {
         $date = Carbon::now()->format('Y-m-d');
+        $leagues = LiveLeague::get()->map(function ($a) { return $a->league_id; });
         $response = Http::get(
             $this->url . '/fixtures/date/' . $date,
             [
                 'api_token' => $this->apikey,
-                'leagues' => 501,
-                'include' => 'lineup.player, bench.player'
+                'leagues' => $leagues,
+                'include' => 'lineup.player, bench.player, localTeam visitorTeam,league '
 
             ]
         );
