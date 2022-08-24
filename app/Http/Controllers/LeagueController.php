@@ -41,7 +41,7 @@ class LeagueController extends Controller
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
         $liveleague = LiveLeague::where('league_id', 8)->first();
-        $this->current_season_id =  !is_null($liveleague)?$liveleague->current_season_id : null;
+        $this->current_season_id =  !is_null($liveleague) ? $liveleague->current_season_id : null;
         $this->previous_season_id = 17141;
     }
 
@@ -484,7 +484,19 @@ class LeagueController extends Controller
     public function getleagues()
     {
         try {
-            return LiveLeague::all();
+            return LiveLeague::get()->map(function ($a) {
+                return [
+                    "id" => $a['id'],
+                    "league_id" => $a['league_id'],
+                    "current_season_id" => $a['current_season_id'],
+                    "name" => $a['name'],
+                    "current_round_id" => $a['current_round_id'],
+                    "current_stage_id" => $a['current_stage_id'],
+                    "country_id" => $a['country_id'],
+                    "logo_path" => $a['logo_path'],
+                    "is_cup" => $a['is_cup'],
+                ];
+            });
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -517,11 +529,30 @@ class LeagueController extends Controller
     public function getleagueteams()
     {
 
-
         try {
             $response = Http::get(
                 $this->url . '/teams/season/' .  $this->current_season_id,
-                ['api_token' => $this->apikey]
+                [
+                    'api_token' => $this->apikey,
+
+                ]
+            );
+            return $response->status() === 200 ? $response['data'] : $response['error'];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+    public function getleagueteamsbyid($id)
+    {
+
+
+        try {
+            $response = Http::get(
+                $this->url . '/teams/season/' .  $id,
+                [
+                    'api_token' => $this->apikey,
+
+                ]
             );
             return $response->status() === 200 ? $response['data'] : $response['error'];
         } catch (\Throwable $th) {
@@ -919,7 +950,7 @@ class LeagueController extends Controller
     }
 
 
-    public function getallplayers($position_id)
+    public function getallplayers($season_id ,$position_id)
     {
 
         try {
@@ -930,7 +961,7 @@ class LeagueController extends Controller
                 ];
             }
             $response = Http::get(
-                $this->url . "/teams/season/" . $this->current_season_id,
+                $this->url . "/teams/season/" . $season_id,
                 [
                     'api_token' => $this->apikey,
                     'include' => 'squad.player',

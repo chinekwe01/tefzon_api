@@ -49,9 +49,11 @@ Route::post('/auth/{provider}/callback', [LinkedSocialAccountController::class, 
 //Guest api
 Route::get('get/league/teams', [LeagueController::class, 'getleagueteams']);
 Route::get('get/leagues', [LeagueController::class, 'getleagues']);
+Route::get('get/league/teams/{id}', [LeagueController::class, 'getleagueteamsbyid']);
+
 Route::get('search/league', [LeagueController::class, 'searchleaguebyname']);
 Route::get('search/team', [LeagueController::class, 'searchteambyname']);
-Route::get('get/all/players/{position_id}', [LeagueController::class, 'getallplayers']);
+Route::get('get/all/players/{season_id}/{position_id}', [LeagueController::class, 'getallplayers']);
 Route::get('get/team/squad/{season_id}/{team_id}', [LeagueController::class, 'getteamsquad']);
 
 Route::middleware('auth:sanctum')->group(function () {
