@@ -205,7 +205,7 @@ class LeagueController extends Controller
         $count = $teams->filter(function ($a) use ($val) {
             return $a == $val;
         })->count();
-        if ($count == 4) {
+        if ($count >= 4) {
             return [
                 'status' => 'max'
             ];
@@ -286,6 +286,10 @@ class LeagueController extends Controller
             //get value by ratings
             $rating = count($player['stats']['data']) ? $player['stats']['data'][0]['rating'] : 5;
             $value = $rating ? ceil((($rating / 10) * 20000000 / 10) / 100000) * 100000 : 4000000;
+            $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
+            if ($checkforsameteam['status'] == 'max') {
+                return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
+            }
             if (!is_null($checkforidenticalplayer)) return response(['status' => false, 'message' => 'already in squad'], 422);
             if ($record['squad_count'] > 0) {
                 if ($record['totalvalue'] > $budget) {
@@ -297,10 +301,7 @@ class LeagueController extends Controller
                 }
 
 
-                // $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
-                // if ($checkforsameteam['status'] == 'max') {
-                //     return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
-                // }
+
 
                 if ($this->checkposition($record['squad'], $player['position_id'])['status'] == 'max') {
                     return response(['status' => false, 'message' => 'max position selection reached'], 422);
@@ -461,7 +462,11 @@ class LeagueController extends Controller
     public function removeplayer(GamerSquad $gamerSquad)
     {
         $gamerSquad->delete();
-        return  response('ok');
+
+        return response([
+            'status' => true,
+            'message' => 'player removed'
+        ], 200);
     }
 
     public function resetTeam()
@@ -950,7 +955,7 @@ class LeagueController extends Controller
     }
 
 
-    public function getallplayers($season_id ,$position_id)
+    public function getallplayers($season_id, $position_id)
     {
 
         try {
