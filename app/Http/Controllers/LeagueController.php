@@ -332,14 +332,14 @@ class LeagueController extends Controller
     public function selectsquad(Request $request)
     {
         $player_id = $request->player_id;
-        $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        if (is_null($free_hit)) {
+        // $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
+        // if (is_null($free_hit)) {
             $startingCount =  $this->user->squad()->where('starting', 1)->count();
             $player = GamerSquad::where('player_id', $player_id)->first();
-        } else {
-            $startingCount =  $this->user->freesquad()->where('starting', 1)->count();
-            $player = FreeHitSquad::where('player_id', $player_id)->first();
-        }
+        // } else {
+        //     $startingCount =  $this->user->freesquad()->where('starting', 1)->count();
+        //     $player = FreeHitSquad::where('player_id', $player_id)->first();
+        // }
 
 
         if ($startingCount == 11) return response(['status' => false, 'message' => 'squad set, replace active player'], 422);
