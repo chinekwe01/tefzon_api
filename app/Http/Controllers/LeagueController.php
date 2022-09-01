@@ -356,7 +356,7 @@ class LeagueController extends Controller
         if ($player->position_id == 4 &&  $this->checkstartingsquad($player) == 3) {
             return 'max selection';
         }
-        $player->starting = true;
+        $player->starting = 1;
         $player->save();
         return response(['status' => true, 'message' => 'squad updated'], 200);
     }
