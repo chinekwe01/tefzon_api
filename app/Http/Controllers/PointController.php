@@ -34,7 +34,7 @@ class PointController extends Controller
 
     public function __construct()
     {
-        $epl = LiveLeague::where('league_id', 8)->first();
+        $epl = LiveLeague::first();
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();

@@ -37,7 +37,7 @@ class HandleNextMatch extends Command
      */
     public function handle()
     {
-        $data = new NewsController();
+        $data = new \App\Http\Controllers\NewsController();
         $data->handlenextmatch();
         return 'ok';
     }
