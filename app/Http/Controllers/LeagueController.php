@@ -287,14 +287,14 @@ class LeagueController extends Controller
             $rating = count($player['stats']['data']) ? $player['stats']['data'][0]['rating'] : 5;
             $value = $rating ? ceil((($rating / 10) * 20000000 / 10) / 100000) * 100000 : 4000000;
             $checkforsameteam =  $this->checkteamid($record['squad'], $player['team_id']);
-            if ($checkforsameteam['status'] == 'max') {
-                return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
-            }
+            // if ($checkforsameteam['status'] == 'max') {
+            //     return response(['status' => false, 'message' => 'can not have more than 4 players from same team'], 422);
+            // }
             if (!is_null($checkforidenticalplayer)) return response(['status' => false, 'message' => 'already in squad'], 422);
             if ($record['squad_count'] > 0) {
-                if ($record['totalvalue'] > $budget) {
-                    return response(['status' => false, 'message' => 'exceeded transfer budget'], 422);
-                }
+                // if ($record['totalvalue'] > $budget) {
+                //     return response(['status' => false, 'message' => 'exceeded transfer budget'], 422);
+                // }
 
                 if ($record['squad_count'] === $this->max_players) {
                     return response(['status' => false, 'message' => 'Squad full'], 422);
@@ -981,7 +981,7 @@ class LeagueController extends Controller
                 ];
             }
             $response = Http::get(
-                $this->url . "/teams/season/" . $season_id,
+                $this->url . "/teams/season/" . $this->current_season_id,
                 [
                     'api_token' => $this->apikey,
                     'include' => 'squad.player',

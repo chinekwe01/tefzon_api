@@ -112,25 +112,25 @@ class User extends Authenticatable
     {
         return $this->squad()->get()->filter(function ($a) {
             return $a->position_id == 4;
-        });
+        })->values();
     }
     public function defenders()
     {
         return $this->squad()->get()->filter(function ($a) {
             return $a->position_id == 2;
-        });
+        })->values();
     }
     public function goalkeepers()
     {
         return $this->squad()->get()->filter(function ($a) {
             return $a->position_id == 1;
-        });
+        })->values();
     }
     public function midfielders()
     {
         return $this->squad()->get()->filter(function ($a) {
             return $a->position_id == 3;
-        });
+        })->values();
     }
 
     public function freeforwards()
