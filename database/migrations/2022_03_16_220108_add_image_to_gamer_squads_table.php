@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('gamer_squads', function (Blueprint $table) {
             $table->string('image_path')->nullable();
-            $table->boolean('starting')->nullable();
+            $table->boolean('starting')->default(false);
         });
     }
 

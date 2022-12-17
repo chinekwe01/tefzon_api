@@ -116,8 +116,8 @@ class LeagueController extends Controller
     public function getmysquad()
     {
 
-        $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        if (is_null($free_hit)) {
+        // $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
+        // if (is_null($free_hit)) {
             $defenders = $this->user->defenders();
             $midfielders = $this->user->midfielders();
             $goalkeepers = $this->user->goalkeepers();
@@ -126,46 +126,46 @@ class LeagueController extends Controller
 
             return [
                 'goalkeepers' => $goalkeepers->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
+                    return $a->starting == true;
+                })->values(),
                 'defenders' => $defenders->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
+                    return $a->starting == true;
+                })->values(),
                 'midfielders' => $midfielders->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
+                    return $a->starting == true;
+                })->values(),
                 'forwards' => $forwards->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
+                    return $a->starting == true;
+                })->values(),
                 'subs' => $this->user->squad()->get()->filter(function ($a) {
-                    return !$a->starting;
-                })->values()->all(),
+                    return $a->starting == false;
+                })->values(),
             ];
-        } else {
-            $defenders = $this->user->freedefenders();
-            $midfielders = $this->user->freemidfielders();
-            $goalkeepers = $this->user->freegoalkeepers();
-            $forwards = $this->user->freeforwards();
+        // } else {
+        //     $defenders = $this->user->freedefenders();
+        //     $midfielders = $this->user->freemidfielders();
+        //     $goalkeepers = $this->user->freegoalkeepers();
+        //     $forwards = $this->user->freeforwards();
 
 
-            return [
-                'goalkeepers' => $goalkeepers->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
-                'defenders' => $defenders->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
-                'midfielders' => $midfielders->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
-                'forwards' => $forwards->filter(function ($a) {
-                    return $a->starting;
-                })->values()->all(),
-                'subs' => $this->user->freesquad()->get()->filter(function ($a) {
-                    return !$a->starting;
-                })->values()->all(),
-            ];
-        }
+        //     return [
+        //         'goalkeepers' => $goalkeepers->filter(function ($a) {
+        //             return $a->starting;
+        //         })->values()->all(),
+        //         'defenders' => $defenders->filter(function ($a) {
+        //             return $a->starting;
+        //         })->values()->all(),
+        //         'midfielders' => $midfielders->filter(function ($a) {
+        //             return $a->starting;
+        //         })->values()->all(),
+        //         'forwards' => $forwards->filter(function ($a) {
+        //             return $a->starting;
+        //         })->values()->all(),
+        //         'subs' => $this->user->freesquad()->get()->filter(function ($a) {
+        //             return !$a->starting;
+        //         })->values()->all(),
+        //     ];
+        // }
     }
     public function getgoalkeepers()
     {
@@ -340,23 +340,27 @@ class LeagueController extends Controller
         //     $startingCount =  $this->user->freesquad()->where('starting', 1)->count();
         //     $player = FreeHitSquad::where('player_id', $player_id)->first();
         // }
-
-
         if ($startingCount == 11) return response(['status' => false, 'message' => 'squad set, replace active player'], 422);
 
         if ($player->position_id == 1 &&  $this->checkstartingsquad($player) == 1) {
-            return 'max selection';
+            return response(['status' => true, 'message' => 'max selection'], 200);
         }
         if ($player->position_id == 2 &&  $this->checkstartingsquad($player) == 5) {
-            return 'max selection';
+            return response(['status' => true, 'message' => 'max selection'], 200);
         }
         if ($player->position_id == 3 &&  $this->checkstartingsquad($player) == 5) {
-            return 'max selection';
+            return response(['status' => true, 'message' => 'max selection'], 200);
         }
         if ($player->position_id == 4 &&  $this->checkstartingsquad($player) == 3) {
-            return 'max selection';
+            return response(['status' => true, 'message' => 'max selection'], 200);
         }
-        $player->starting = 1;
+        if($player->starting == 1){
+            $player->update(["starting" => true]);
+            $player->save();
+            return response(['status' => true, 'message' => 'something went wrong please choose another player'], 200);
+        }
+    
+        $player->update(["starting" => true]);
         $player->save();
         return response(['status' => true, 'message' => 'squad updated'], 200);
     }
