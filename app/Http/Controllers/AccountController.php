@@ -66,7 +66,7 @@ class AccountController extends Controller
 
     public function getaccountdetails()
     {
-        return $this->user->accountdetails()->first();
+        return $this->user->accountdetails;
     }
 
     public function updateaccountdetails(Request $request)
