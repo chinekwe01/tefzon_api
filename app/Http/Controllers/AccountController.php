@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\WithdrawRequest;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
 
 class AccountController extends Controller
 {
@@ -160,13 +161,27 @@ class AccountController extends Controller
 
         $event =  $request->event;
         $data = $request->data;
-        switch ($event) {
-            case 'charge.success':
-                break;
-            case 'charge.failed':
-                break;
-            default;
+        $secretHash = "bNTddR8JVuyCfZ6";
+        $signature = $request->header("verif-hash");
+        if (!$signature || ($signature !== $secretHash)) {
+            return response()->json([
+                'errors' => "Error",
+            ], 401);
         }
+        $customer = $data["customer"]["email"];
+        $user = User::where("email",$customer)->first();
+        if($user){
+            $account = $user->accountdetails()->first();
+            $account->balance = $account->balance + $data["amount"];
+            $account->save();
+        }else{
+            return response()->json([
+                'errors' => "Error",
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+        ], 200);;
     }
     public function destroy($id)
     {

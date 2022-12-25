@@ -35,6 +35,8 @@ Route::post('reset-password', [UserController::class, 'resetpassword']);
 Route::post('request-otp', [UserController::class, 'requestotp']);
 Route::post('reset-by-otp', [UserController::class, 'changePasswordByOtp']);
 Route::post('verify-email', [UserController::class, 'verifyemail']);
+Route::post('verify/payment', [AccountController::class, 'verifypayment']);
+// bNTddR8JVuyCfZ6
 
 // Auth admin
 Route::middleware('auth:sanctum', 'ability:role-admin')->get('/user', function (Request $request) {
