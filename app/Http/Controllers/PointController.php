@@ -48,7 +48,7 @@ class PointController extends Controller
 
 
         return DB::transaction(function () use ($response, $date) {
-            // try {
+            try {
             $triple_captain = ActiveChip::where('user_id', $this->user->id)->where('chip', 'triple_captain')->first();
             $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
 
@@ -67,7 +67,7 @@ class PointController extends Controller
 
             foreach ($sortedresults as $key) {
 
-                if ($key['status'] == 'HT' || $key['status'] == 'LIVE' || $key['status'] == 'FT') {
+                if ($key['status'] == 'HT' || $key['status'] == 'LIVE' || $key['status'] == 'FT' || $key['status'] == 'NS') {
 
                     foreach ($key['lineup']['data'] as $player) {
                         $points = 0;
@@ -210,9 +210,9 @@ class PointController extends Controller
             }
 
             return response('ok');
-            // } catch (\Throwable $th) {
-            //     throw $th;
-            // }
+            } catch (\Throwable $th) {
+                throw $th;
+            }
         });
     }
     public function squadwithpoint()
@@ -370,12 +370,8 @@ class PointController extends Controller
 
         if (!count($sortedresults)) return response('No data', 200);
         $gameweek = $sortedresults[0]['round_id'];
-
-
         //Check if this week squad has been locked in
         $checkIfLocked = LockStatus::where('gameweek', $gameweek)->first();
-
-
         if (is_null($checkIfLocked)) {
             $now = Carbon::now();
             $fifteen = Carbon::now()->addMinutes(15);
@@ -387,7 +383,6 @@ class PointController extends Controller
                 return response('Time available', 200);
             }
         } else {
-
             $this->handlepoints($date, $response);
             $this->addpointstoleague();
             return response(['status' => true, 'message' => 'ok'], 200);

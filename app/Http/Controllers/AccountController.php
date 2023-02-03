@@ -66,7 +66,13 @@ class AccountController extends Controller
 
     public function getaccountdetails()
     {
-        return $this->user->accountdetails;
+        $details = $this->user->accountdetails;
+        return response([
+            'success' => true,
+            'message' => 'request sent',
+            'user' => $this->user,
+            'details' => $details,
+        ], 201);
     }
 
     public function updateaccountdetails(Request $request)
@@ -181,7 +187,7 @@ class AccountController extends Controller
         }
         return response()->json([
             'success' => true,
-        ], 200);;
+        ], 200);
     }
     public function destroy($id)
     {

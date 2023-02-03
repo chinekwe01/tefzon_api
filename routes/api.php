@@ -26,6 +26,18 @@ use App\Http\Controllers\LinkedSocialAccountController;
 |
 */
 
+Route::put('test',function(Request $request)
+{
+    return response()->json([
+        'success' => true,
+        'message' => 'everything is working',
+        'data' => $request->all(),
+        'full url '=> $request->fullUrl(),
+        'method'=> $request->method(),
+        'header'=> $request->header(),
+    ], 200);;
+});
+
 //Auth routes
 Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login']);
@@ -36,6 +48,7 @@ Route::post('request-otp', [UserController::class, 'requestotp']);
 Route::post('reset-by-otp', [UserController::class, 'changePasswordByOtp']);
 Route::post('verify-email', [UserController::class, 'verifyemail']);
 Route::post('verify/payment', [AccountController::class, 'verifypayment']);
+Route::get('check-fixtures', [LeagueController::class, 'checkfixtures']);
 // bNTddR8JVuyCfZ6
 
 // Auth admin

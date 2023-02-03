@@ -153,12 +153,12 @@ class UserController extends Controller
     public function login(Request $request)
     {
         try {
-
             $validator = Validator::make(request()->all(), [
                 'email' => 'required|email|exists:users',
                 'password' => 'required|min:6',
 
             ]);
+        
             if ($validator->fails()) {
                 return response()->json([
                     'errors' => $validator->errors(),
