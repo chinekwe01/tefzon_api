@@ -375,36 +375,65 @@ class LeagueController extends Controller
 
     public function substituteplayer(Request $request)
     {
-        $squads = $request->squads;
+
+
+    
+
+        $squads = $request['squads'];
+
+        // return response([
+        //     'squad'=>$squads,
+          
+        // ], 200);
+
+
+        // dd($squads);
+
+        
         $free_hit = ActiveChip::where('user_id', $this->user->id)->where('chip', 'free_hit')->first();
-        foreach ($squads as $squad) {
-            if (is_null($free_hit)) {
-                $currentPlayer = GamerSquad::find($squad['current_player_id']);
-                $replacementPlayer = GamerSquad::find($squad['replacement_player_id']);
-            } else {
-                $currentPlayer = FreeHitSquad::find($squad['current_player_id']);
-                $replacementPlayer = FreeHitSquad::find($squad['replacement_player_id']);
-            }
+
+            foreach ($squads as $squad) {
+
+                $currentPlayer_id = $squad['current_player_id'];
+                $replacement_id = $squad['replacement_player_id'];
+
+                            if (is_null($free_hit)) {
+                                $currentPlayer = GamerSquad::where('player_id', '=', $currentPlayer_id)->first();
+                                $replacementPlayer = GamerSquad::where('player_id','=', $replacement_id)->first();
+                            } else {
+                                $currentPlayer = FreeHitSquad::where('player_id', '=', $currentPlayer_id)->first();
+                                $replacementPlayer = FreeHitSquad::where('player_id','=', $replacement_id)->first();
+                            }
+                
+
+                // $currentPlayer = GamerSquad::where('player_id', '=', $currentPlayer_id)->first();
+                // $replacementPlayer = GamerSquad::where('player_id','=', $replacement_id)->first();
+
+
 
 
             //create temp player
             $tempPlayer = new stdClass();
-            $tempPlayer->player_name = $currentPlayer->player_name;
-            $tempPlayer->player_id =  $currentPlayer->player_id;
-            $tempPlayer->player_position = $currentPlayer->player_position;
-            $tempPlayer->position_id = $currentPlayer->position_id;
-            $tempPlayer->image_path = $currentPlayer->image_path;
-            $tempPlayer->team_id = $currentPlayer->team_id;
-            $tempPlayer->team = $currentPlayer->team;
+            $tempPlayer->player_name = $currentPlayer['player_name'];
+            $tempPlayer->player_id =  $currentPlayer['player_id'];
+            $tempPlayer->player_position = $currentPlayer['player_position'];
+            $tempPlayer->position_id = $currentPlayer['position_id'];
+            $tempPlayer->image_path = $currentPlayer['image_path'];
+            $tempPlayer->team_id = $currentPlayer['team_id'];
+            $tempPlayer->team = $currentPlayer['team'];
+
+    
+
 
             //update current player
-            $currentPlayer->player_name = $replacementPlayer->player_name;
-            $currentPlayer->player_id = $replacementPlayer->player_id;
-            $currentPlayer->player_position = $replacementPlayer->player_position;
-            $currentPlayer->position_id = $replacementPlayer->position_id;
-            $currentPlayer->image_path = $replacementPlayer->image_path;
-            $currentPlayer->team_id = $currentPlayer->team_id;
-            $currentPlayer->team = $currentPlayer->team;
+            $currentPlayer->player_name = $replacementPlayer['player_name'];
+            $currentPlayer->player_id = $replacementPlayer['player_id'];
+            $currentPlayer->player_position = $replacementPlayer['player_position'];
+            $currentPlayer->position_id = $replacementPlayer['position_id'];
+            $currentPlayer->image_path = $replacementPlayer['image_path'];
+            $currentPlayer->team_id = $replacementPlayer['team_id'];
+            $currentPlayer->team = $replacementPlayer['team'];
+
 
             //update previous player
             $replacementPlayer->player_name = $tempPlayer->player_name;
@@ -412,21 +441,28 @@ class LeagueController extends Controller
             $replacementPlayer->player_position = $tempPlayer->player_position;
             $replacementPlayer->position_id = $tempPlayer->position_id;
             $replacementPlayer->image_path = $tempPlayer->image_path;
-            $replacementPlayer->team_id = $currentPlayer->team_id;
-            $replacementPlayer->team = $currentPlayer->team;
+            $replacementPlayer->team_id = $tempPlayer->team_id;
+            $replacementPlayer->team = $tempPlayer->team;
 
 
-            $replacementPlayer->save();
             $currentPlayer->save();
-        }
+            $replacementPlayer->save();
 
 
 
-        return response([
-            'status' => true,
-            'message' => 'squad updated'
-        ], 200);
+                return response([
+                    'status' => true,
+                    'message' => 'squad updated'
+                ], 200);
+
+                    
+                    
+            }
+
+
     }
+
+    
 
     public function swapplayer(Request $request)
     {
@@ -472,6 +508,9 @@ class LeagueController extends Controller
             'message' => 'player removed'
         ], 200);
     }
+
+
+    
 
     public function resetTeam()
     {
