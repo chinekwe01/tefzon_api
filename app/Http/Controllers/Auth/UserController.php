@@ -299,7 +299,7 @@ class UserController extends Controller
     public function requestotp(Request $request)
     {
 
-        try {
+        // try {
             $request->validate([
                 'email' => 'required|email|exists:users',
             ]);
@@ -331,12 +331,12 @@ class UserController extends Controller
                 "message" => 'otp sent to email'
 
             ], 200);
-        } catch (\Throwable $th) {
-            return response([
-                'status' => false,
-                'message' => 'failed'
-            ], 500);
-        }
+        // } catch (\Throwable $th) {
+        //     return response([
+        //         'status' => false,
+        //         'message' => 'failed'
+        //     ], 500);
+        // }
     }
 
     public function changePasswordByOtp(Request $request)

@@ -11,15 +11,15 @@ class OtpRequest extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $maildata;
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public $details;
-    public function __construct($details)
+    public function __construct($maildata)
     {
-        $this->details = $details;
+        $this->maildata = $maildata;
     }
 
     /**
@@ -29,8 +29,11 @@ class OtpRequest extends Mailable
      */
     public function build()
     {
-        return $this->from('tefzon@gmail.com', 'Tefzon Fantasy League')
-        ->subject('Tefzon Account Otp Reset')
-            ->markdown('emails.otprequest', $this->details);
+        return $this->markdown('emails.otprequest',)
+        ->with('mailData', $this->maildata);
+
+
+        // return $this->subject('Mail from ItSolutionStuff.com')
+        // ->view('emails.otprequest');
     }
 }
