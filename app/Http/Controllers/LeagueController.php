@@ -468,7 +468,7 @@ class LeagueController extends Controller
             ], 405);
         }
         $chip->free_transfer = $chip->free_transfer - 1;
-        // $chip->free_transfer->save();
+        $chip->free_transfer->save();
 
         $record = $this->getmysquadcount();
         $currentPlayer = GamerSquad::where('player_id', $request->current_player_id)->first();
@@ -490,11 +490,7 @@ class LeagueController extends Controller
         $currentPlayer->team_id = $player['team_id'];
         $currentPlayer->team = $player['team']['data']['name'];
         $currentPlayer->image_path = $player['image_path'];
-        
-        return response()->json([
-            'save'=>$currentPlayer,
-        ]);
-        // $currentPlayer->save();
+        $currentPlayer->save();
         return response(['status' => true, 'message' => 'squad updated'], 200);
     }
     
