@@ -23,6 +23,7 @@ class PointController extends Controller
     protected $apikey;
     public $user;
     public $current_week;
+    public $current_season_id;
     public $previous_week;
     public $max_players = 15;
     public $max_forwards = 3;
@@ -38,8 +39,8 @@ class PointController extends Controller
         $this->url =  config('services.sportmonks.url');
         $this->apikey =  config('services.sportmonks.key');
         $this->user = auth('sanctum')->user();
-        $this->current_season_id =  $epl->current_season_id;
-        $this->current_week =  $epl->current_round_id;
+        // $this->current_season_id =  $epl->current_season_id;
+        // $this->current_week =  $epl->current_round_id;
         $this->previous_week = 247461;
     }
 
@@ -343,6 +344,8 @@ class PointController extends Controller
         $lock->save();
         return response('Latest Squad locked', 200);
     }
+
+
     public function checkfixtures()
     {
         $date = Carbon::now()->format('Y-m-d');
